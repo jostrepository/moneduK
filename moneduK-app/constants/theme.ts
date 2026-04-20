@@ -1,60 +1,64 @@
-// ─── Paleta MoneduK — refinada ────────────────────────────
+// ─── Paleta MoneduK ───────────────────────────────────────
 export const Colors = {
-  // Primarios
-  pink:        '#F472B6',
-  pinkLight:   '#FDF2F8',
-  pinkMid:     '#EC4899',
-  pinkDark:    '#BE185D',
-  pinkDeep:    '#9D174D',
+  pink:          '#F472B6',
+  pinkLight:     '#FDF2F8',
+  pinkMid:       '#EC4899',
+  pinkDark:      '#BE185D',
+  pinkDeep:      '#9D174D',
 
-  yellow:      '#FBBF24',
-  yellowLight: '#FFFBEB',
-  yellowMid:   '#F59E0B',
-  yellowDark:  '#B45309',
+  yellow:        '#FBBF24',
+  yellowLight:   '#FFFBEB',
+  yellowMid:     '#F59E0B',
+  yellowDark:    '#B45309',
 
-  // Fondos
-  background:  '#FFF0F7',
+  background:    '#FFF0F7',
   backgroundAlt: '#FFF8FD',
-  card:        '#FFFFFF',
-  border:      '#FCE7F3',
-  borderMid:   '#F9A8D4',
+  card:          '#FFFFFF',
+  border:        '#FCE7F3',
+  borderMid:     '#F9A8D4',
 
-  // Texto
   textPrimary:   '#1A0A10',
   textSecondary: '#9D174D',
   textMuted:     '#C084B0',
   textLight:     '#F9A8D4',
 
-  // Estados mascota
-  excellent: '#22C55E',
-  good:      '#86EFAC',
-  regular:   '#FBBF24',
-  bad:       '#F97316',
-  critical:  '#EF4444',
+  excellent:     '#22C55E',
+  good:          '#86EFAC',
+  regular:       '#FBBF24',
+  bad:           '#F97316',
+  critical:      '#EF4444',
 
-  // Módulos (colores únicos por módulo)
-  trabajos:   '#F59E0B',
-  inversiones:'#6366F1',
-  apuestas:   '#F43F5E',
-  tienda:     '#10B981',
-  misiones:   '#8B5CF6',
-  lecciones:  '#3B82F6',
+  trabajos:      '#F59E0B',
+  inversiones:   '#6366F1',
+  apuestas:      '#F43F5E',
+  tienda:        '#10B981',
+  misiones:      '#8B5CF6',
+  lecciones:     '#3B82F6',
 
-  // Utilidad
-  white:   '#FFFFFF',
-  success: '#22C55E',
-  error:   '#EF4444',
-  warning: '#F59E0B',
-  info:    '#3B82F6',
-  overlay: 'rgba(26,10,16,0.45)',
+  white:         '#FFFFFF',
+  success:       '#22C55E',
+  error:         '#EF4444',
+  warning:       '#F59E0B',
+  info:          '#3B82F6',
+  overlay:       'rgba(26,10,16,0.45)',
 };
 
+// ─── Fuentes Nunito ───────────────────────────────────────
+export const Fonts = {
+  regular:    'Nunito_400Regular',
+  semiBold:   'Nunito_600SemiBold',
+  bold:       'Nunito_700Bold',
+  extraBold:  'Nunito_800ExtraBold',
+  black:      'Nunito_900Black',
+};
+
+// ─── Tipografía ───────────────────────────────────────────
 export const Typography = {
-  // Pesos
-  regular:   '400' as const,
-  medium:    '600' as const,
-  bold:      '700' as const,
-  black:     '900' as const,
+  // Familias
+  regular:   'Nunito_400Regular',
+  medium:    'Nunito_600SemiBold',
+  bold:      'Nunito_700Bold',
+  black:     'Nunito_900Black',
 
   // Tamaños
   xs:   11,
@@ -69,6 +73,17 @@ export const Typography = {
   tight:  1.2,
   normal: 1.5,
   loose:  1.8,
+};
+
+// Alias para compatibilidad con componentes anteriores
+export const FontSizes = {
+  xs:   11,
+  sm:   13,
+  md:   15,
+  lg:   18,
+  xl:   22,
+  xxl:  28,
+  hero: 38,
 };
 
 export const Radii = {
@@ -89,7 +104,6 @@ export const Spacing = {
   xl:  32,
   xxl: 48,
 };
-export const FontSizes = Typography;
 
 export const Shadows = {
   sm: {
@@ -120,5 +134,4 @@ export const Shadows = {
     shadowRadius: 10,
     elevation: 5,
   },
-  
 };

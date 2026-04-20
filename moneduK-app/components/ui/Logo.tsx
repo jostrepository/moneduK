@@ -5,7 +5,7 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const HEIGHTS = { sm: 30, md: 28, lg: 52 };
+const HEIGHTS = { sm: 30, md: 38, lg: 52 };
 
 export const Logo = ({ size = 'md' }: LogoProps) => {
   const h = HEIGHTS[size];
@@ -15,13 +15,13 @@ export const Logo = ({ size = 'md' }: LogoProps) => {
       {/* Cerdito con birrete — imagen real */}
       <Image
         source={require('../../assets/images/logocerditomoneduk.png')}
-        style={{ width: h * 2, height: h * 2, borderRadius: 6 }}
+        style={{ width: h * 2.1, height: h * 2, borderRadius: 6 }}
         resizeMode="cover"
       />
       {/* Tipografía MoneduK — imagen real */}
       <Image
-        source={require('../../assets/images/logotipografiamoneduk.png')}
-        style={{ height: h * 4, width: h * 4 }}
+        source={require('../../assets/images/logotipografiamoneduk(1).png')}
+        style={{ height: h*0.9 , width: h*3.8 }}
         resizeMode="cover"
       />
     </View>
@@ -32,6 +32,6 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 0.01,
+    gap: 4,
   },
 });

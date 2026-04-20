@@ -15,6 +15,6 @@ export default function Index() {
   }
 
   return token
-    ? <Redirect href="/(tabs)/home" />
+    ? <Redirect href="/(tabs)/menu" />
     : <Redirect href="/(auth)/welcome" />;
 }

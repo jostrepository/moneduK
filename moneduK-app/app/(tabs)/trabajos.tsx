@@ -21,6 +21,9 @@ export default function TrabajosScreen() {
   const [loading,   setLoading]   = useState(true);
   const [working,   setWorking]   = useState<number | null>(null);
   const [resultado, setResultado] = useState<any>(null);
+  const [bloqueado, setBloqueado] = useState(false);
+  const [segundosLiberar, setSegundosLiberar] = useState(0);
+  const [trabajosEnHora, setTrabajosEnHora] = useState(0);
 
   const fetchData = async () => {
     try {
@@ -28,8 +31,11 @@ export default function TrabajosScreen() {
         trabajoService.getTrabajos(),
         walletService.getMiWallet(),
       ]);
-      setTrabajos(tRes.data.data);
+      setTrabajos(tRes.data.data.trabajos);
       setSaldo(Number(wRes.data.data.saldo));
+      setBloqueado(tRes.data.data.bloqueado);
+  setSegundosLiberar(tRes.data.data.segundos_para_liberar);
+  setTrabajosEnHora(tRes.data.data.trabajos_en_ultima_hora);
     } catch {
       Alert.alert('Error', 'No se pudieron cargar los trabajos');
     } finally {

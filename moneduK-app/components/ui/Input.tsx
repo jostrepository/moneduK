@@ -4,12 +4,12 @@ import {
   StyleSheet, TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, FontSizes, Radii, Spacing } from '../../constants/theme';
+import { Colors, Fonts, FontSizes, Radii, Spacing } from '../../constants/theme';
 
 interface InputProps extends TextInputProps {
-  label?: string;
-  error?: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  label?:      string;
+  error?:      string;
+  icon?:       keyof typeof Ionicons.glyphMap;
   isPassword?: boolean;
 }
 
@@ -47,7 +47,7 @@ export const Input = ({ label, error, icon, isPassword = false, ...props }: Inpu
 
 const styles = StyleSheet.create({
   wrapper:   { marginBottom: Spacing.md },
-  label:     { fontSize: FontSizes.sm, fontWeight: '600', color: Colors.textSecondary, marginBottom: 6 },
+  label:     { fontFamily: Fonts.bold, fontSize: FontSizes.sm, color: Colors.textSecondary, marginBottom: 6 },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -56,11 +56,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.md,
-    height: 52,
+    height: 54,
   },
   containerError: { borderColor: Colors.error },
   icon:   { marginRight: Spacing.sm },
-  input:  { flex: 1, fontSize: FontSizes.md, color: Colors.textPrimary },
+  input:  { flex: 1, fontFamily: Fonts.semiBold, fontSize: FontSizes.md, color: Colors.textPrimary },
   eyeBtn: { padding: 4 },
-  error:  { fontSize: FontSizes.xs, color: Colors.error, marginTop: 4 },
+  error:  { fontFamily: Fonts.semiBold, fontSize: FontSizes.xs, color: Colors.error, marginTop: 4 },
 });

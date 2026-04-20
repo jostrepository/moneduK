@@ -3,15 +3,15 @@ import {
   TouchableOpacity, Text, ActivityIndicator,
   StyleSheet, ViewStyle, TextStyle,
 } from 'react-native';
-import { Colors, Radii, FontSizes, Shadows } from '../../constants/theme';
+import { Colors, Fonts, FontSizes, Radii, Shadows } from '../../constants/theme';
 
 interface ButtonProps {
-  label: string;
-  onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-  loading?: boolean;
+  label:     string;
+  onPress:   () => void;
+  variant?:  'primary' | 'secondary' | 'outline' | 'danger';
+  loading?:  boolean;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?:    ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
 }
@@ -46,25 +46,22 @@ export const Button = ({
 
 const styles = StyleSheet.create({
   base: {
-    height: 52,
+    height: 54,
     borderRadius: Radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     ...Shadows.md,
   },
   fullWidth: { width: '100%' },
 
-  // Variantes
   primary:   { backgroundColor: Colors.pinkMid },
-  secondary: { backgroundColor: Colors.yellow },
+  secondary: { backgroundColor: Colors.yellowMid },
   outline:   { backgroundColor: 'transparent', borderWidth: 2, borderColor: Colors.pinkMid, elevation: 0, shadowOpacity: 0 },
   danger:    { backgroundColor: Colors.error },
-
   disabled:  { opacity: 0.5 },
 
-  // Textos
-  text:          { fontSize: FontSizes.md, fontWeight: '700', letterSpacing: 0.3 },
+  text:          { fontFamily: Fonts.black, fontSize: FontSizes.md, letterSpacing: 0.3 },
   primaryText:   { color: Colors.white },
   secondaryText: { color: Colors.yellowDark },
   outlineText:   { color: Colors.pinkMid },

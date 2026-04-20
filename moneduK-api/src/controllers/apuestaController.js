@@ -1,7 +1,7 @@
-const { pool } = require('../config/db');
-const R = require('../utils/response');
+const { pool }            = require('../config/db');
+const R                   = require('../utils/response');
+const { aplicarXPySalud } = require('../utils/mascotaHelper');
 
-// Mensajes educativos aleatorios que se muestran al apostar
 const LECCIONES_MORALES = [
   'Apostar es arriesgado: puedes perder todo lo que tienes. ¡El dinero se gana con esfuerzo!',
   'Los juegos de azar están diseñados para que la casa siempre gane. ¡Mejor ahorra ese dinero!',
@@ -11,50 +11,49 @@ const LECCIONES_MORALES = [
   '¿Sabías que muchas personas pierden sus ahorros apostando? ¡Cuida tu KoinK!',
 ];
 
+// ─── Realizar apuesta ─────────────────────────────────────
 /**
  * POST /apuestas
- * Registra una apuesta. Siempre daña la mascota independientemente del resultado.
- * Si el usuario gana, recibe algo de vuelta, pero la mascota sufre igual.
- * Body: { monto }
+ * Reglas:
+ * - 25% probabilidad de DUPLICAR la apuesta (ganar el monto apostado)
+ * - 75% probabilidad de PERDER lo apostado
+ * - SIEMPRE -10 HP al cerdito (sin importar resultado)
+ * - NO genera XP
  */
 const realizarApuesta = async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const { monto } = req.body;
+    const { monto }  = req.body;
     const id_usuario = req.user.id_usuario;
 
-    // Verificar saldo suficiente
+    // Verificar saldo
     const [walletRows] = await conn.query(
-      'SELECT id_wallet, saldo FROM wallet WHERE id_usuario = ?',
-      [id_usuario]
+      'SELECT id_wallet, saldo FROM wallet WHERE id_usuario = ?', [id_usuario]
     );
     if (walletRows.length === 0) return R.notFound(res, 'Wallet no encontrada');
     const { id_wallet, saldo } = walletRows[0];
 
-    if (saldo < monto) {
+    if (Number(saldo) < monto) {
       return R.badRequest(res, 'No tienes suficiente KoinK para apostar');
     }
 
-    // Resultado aleatorio: 35% de ganar (siempre desventaja para enseñar)
-    const gano = Math.random() < 0.35;
-    const resultado = gano ? 'ganó' : 'perdió';
-    const monto_resultado = gano
-      ? parseFloat((monto * 1.5).toFixed(2))   // gana 1.5x
-      : 0;
+    // ── 25% ganar / 75% perder ────────────────────────────
+    const gano           = Math.random() < 0.25;
+    const resultado      = gano ? 'ganó' : 'perdió';
+    // Si gana: recibe el doble (monto apostado * 2)
+    // Si pierde: recibe 0
+    const monto_resultado = gano ? parseFloat((monto * 2).toFixed(2)) : 0;
 
-    // Delta de saldo: pierde lo apostado, si ganó recupera el resultado
-    const delta_saldo = gano
-      ? monto_resultado - monto   // ganancia neta (puede ser positiva)
-      : -monto;                   // pérdida total
-
-    const saldo_nuevo = parseFloat((saldo + delta_saldo).toFixed(2));
+    // Delta de saldo:
+    //   ganó  → recibe monto * 2, pero ya se descontó el monto → ganancia neta = monto
+    //   perdió → pierde el monto apostado
+    const delta_saldo = gano ? monto : -monto;
+    const saldo_nuevo = parseFloat((Number(saldo) + delta_saldo).toFixed(2));
 
     // Mensaje educativo aleatorio
-    const leccion_moral = LECCIONES_MORALES[
-      Math.floor(Math.random() * LECCIONES_MORALES.length)
-    ];
+    const leccion_moral = LECCIONES_MORALES[Math.floor(Math.random() * LECCIONES_MORALES.length)];
 
-    // Impacto en mascota: SIEMPRE negativo (-10 salud sin importar resultado)
+    // Daño fijo: -10 HP siempre, 0 XP
     const impacto_salud = -10;
 
     await conn.beginTransaction();
@@ -70,42 +69,26 @@ const realizarApuesta = async (req, res) => {
     // 2. Actualizar wallet
     await conn.query(
       `UPDATE wallet
-       SET saldo        = saldo + ?,
+       SET saldo         = saldo + ?,
            total_gastado = total_gastado + ?
        WHERE id_wallet = ?`,
       [delta_saldo, monto, id_wallet]
     );
 
-    // 3. Registrar transacción tipo "apuesta" (id_tipo = 5, es_positivo = 0)
+    // 3. Transacción
     await conn.query(
-      `INSERT INTO transaccion (id_wallet, id_tipo, monto, descripcion)
-       VALUES (?, 5, ?, ?)`,
-      [id_wallet, monto, `Apuesta — ${resultado}`]
+      'INSERT INTO transaccion (id_wallet, id_tipo, monto, descripcion) VALUES (?,5,?,?)',
+      [id_wallet, monto, `Apuesta — ${resultado} (${gano ? '+' + monto : '-' + monto} KoinK)`]
     );
 
-    // 4. Dañar mascota SIEMPRE (-10 salud)
-    const [mascota] = await conn.query(
-      'SELECT id_mascota, salud FROM mascota WHERE id_usuario = ?',
-      [id_usuario]
+    // 4. -10 HP siempre, 0 XP
+    const mascotaResult = await aplicarXPySalud(
+      conn, id_usuario,
+      0,            // sin XP
+      impacto_salud, // -10 HP
+      100,          // umbral no importa (es daño, siempre se aplica)
+      'Realizó una apuesta'
     );
-    let mascota_data = null;
-    if (mascota.length > 0) {
-      const { id_mascota, salud } = mascota[0];
-      const salud_nueva = Math.max(0, salud + impacto_salud);
-      const [estados] = await conn.query(
-        'SELECT id_estado FROM estado_mascota WHERE ? BETWEEN rango_salud_min AND rango_salud_max LIMIT 1',
-        [salud_nueva]
-      );
-      await conn.query(
-        'UPDATE mascota SET salud = ?, id_estado = ? WHERE id_mascota = ?',
-        [salud_nueva, estados[0]?.id_estado, id_mascota]
-      );
-      await conn.query(
-        'INSERT INTO historial_mascota (id_mascota, salud_anterior, salud_nueva, motivo) VALUES (?,?,?,?)',
-        [id_mascota, salud, salud_nueva, 'Realizó una apuesta']
-      );
-      mascota_data = { salud_anterior: salud, salud_nueva };
-    }
 
     await conn.commit();
 
@@ -115,10 +98,15 @@ const realizarApuesta = async (req, res) => {
       monto_resultado,
       delta_saldo,
       saldo_nuevo,
-      mascota:         mascota_data,
-      leccion_moral,   // ← siempre se muestra en la app
-      advertencia:     '⚠️ Apostar siempre daña a tu mascota, aunque ganes.',
-    }, gano ? '¡Ganaste esta vez... pero tu cerdito sufrió! 😟' : 'Perdiste la apuesta y tu cerdito está triste 😢');
+      mascota:         mascotaResult,
+      salud_perdida:   10,
+      xp_ganado:       0,
+      leccion_moral,
+      advertencia:     '⚠️ Apostar siempre quita 10 HP a tu cerdito, aunque ganes.',
+    }, gano
+      ? `¡Ganaste 🪙 ${monto} KoinK extra! Pero tu cerdito perdió 10 HP 😟`
+      : `Perdiste 🪙 ${monto} KoinK y tu cerdito perdió 10 HP 😢`
+    );
   } catch (err) {
     await conn.rollback();
     return R.serverError(res, err);
@@ -127,9 +115,7 @@ const realizarApuesta = async (req, res) => {
   }
 };
 
-/**
- * GET /apuestas/historial
- */
+// ─── Historial ────────────────────────────────────────────
 const getHistorialApuestas = async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -137,14 +123,11 @@ const getHistorialApuestas = async (req, res) => {
               leccion_moral, impacto_salud, fecha
        FROM apuesta
        WHERE id_usuario = ?
-       ORDER BY fecha DESC
-       LIMIT 50`,
+       ORDER BY fecha DESC LIMIT 50`,
       [req.user.id_usuario]
     );
     return R.ok(res, rows);
-  } catch (err) {
-    return R.serverError(res, err);
-  }
+  } catch (err) { return R.serverError(res, err); }
 };
 
 module.exports = { realizarApuesta, getHistorialApuestas };

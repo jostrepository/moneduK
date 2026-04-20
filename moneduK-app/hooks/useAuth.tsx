@@ -27,18 +27,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Cargar sesión guardada al iniciar
-  useEffect(() => {
-    (async () => {
-      try {
-        const [savedToken, savedUser] = await AsyncStorage.multiGet(['token', 'usuario']);
-        if (savedToken[1] && savedUser[1]) {
-          setToken(savedToken[1]);
-          setUsuario(JSON.parse(savedUser[1]));
-        }
-      } catch (_) {}
-      finally { setIsLoading(false); }
-    })();
-  }, []);
+useEffect(() => {
+  (async () => {
+    try {
+      const [savedToken, savedUser] = await AsyncStorage.multiGet(['token', 'usuario']);
+      if (savedToken[1] && savedUser[1]) {
+        setToken(savedToken[1]);
+        setUsuario(JSON.parse(savedUser[1]));
+      }
+    } catch (_) {}
+    finally { setIsLoading(false); }
+  })();
+}, []);
 
   const login = async (email: string, contrasena: string) => {
     const res = await authService.login(email, contrasena);
