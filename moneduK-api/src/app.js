@@ -16,6 +16,7 @@ const apuestaRoutes  = require('./routes/apuesta.routes');
 const inversionRoutes = require('./routes/inversion.routes');
 const tiendaRoutes   = require('./routes/tienda.routes');
 const misionRoutes   = require('./routes/mision.routes');
+const minijuegoRoutes = require('./routes/minijuego.routes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,7 @@ app.use('/api/apuestas',   apuestaRoutes);
 app.use('/api/inversiones', inversionRoutes);
 app.use('/api/tienda',     tiendaRoutes);
 app.use('/api/misiones',   misionRoutes);
+app.use('/api/minijuegos', minijuegoRoutes);
 
 // ─── Manejo de errores ────────────────────────────────────
 app.use(notFoundHandler);
