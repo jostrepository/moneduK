@@ -1,3 +1,81 @@
+# Dependencies
 moneduK-api/node_modules/ 
 moneduK-app/node_modules/ 
-moneduK-api/.env 
+
+# Environment variables and sensitive configuration
+moneduK-api/.env
+moneduK-api/.env.local
+moneduK-api/.env.development
+moneduK-api/.env.production
+moneduK-app/.env
+moneduK-app/.env.local
+moneduK-app/.env.development
+moneduK-app/.env.production
+.env
+.env.local
+.env.development
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+moneduK-api/database/
+moneduK-api/data/
+moneduK-api/db/
+moneduK-api/moneduK.db
+moneduK-api/moneduK.sqlite
+moneduK-api/moneduK.sqlite3
+
+# Logs
+*.log
+moneduK-api/logs/
+moneduK-api/error.log
+moneduK-api/access.log
+moneduK-api/debug.log
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+moneduK-api/backups/
+moneduK-api/dumps/
+
+# Sensitive data files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+private/
+config/secrets.json
+
+# User data and personal information
+moneduK-api/uploads/
+moneduK-api/user_data/
+moneduK-api/personal_data/
+moneduK-api/sensitive_data/
+
+# Cache and temporary files
+.cache/
+*.cache
+.tmp/
+temp/
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 
