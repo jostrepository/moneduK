@@ -45,22 +45,15 @@ export const Colors = {
 
 // ─── Fuentes Nunito ───────────────────────────────────────
 export const Fonts = {
-  regular:    'Nunito_400Regular',
-  semiBold:   'Nunito_600SemiBold',
-  bold:       'Nunito_700Bold',
-  extraBold:  'Nunito_800ExtraBold',
-  black:      'Nunito_900Black',
+  regular:   'Nunito_400Regular',
+  semiBold:  'Nunito_600SemiBold',
+  bold:      'Nunito_700Bold',
+  extraBold: 'Nunito_800ExtraBold',
+  black:     'Nunito_900Black',
 };
 
-// ─── Tipografía ───────────────────────────────────────────
+// ─── Tamaños de texto ─────────────────────────────────────
 export const Typography = {
-  // Familias
-  regular:   'Nunito_400Regular',
-  medium:    'Nunito_600SemiBold',
-  bold:      'Nunito_700Bold',
-  black:     'Nunito_900Black',
-
-  // Tamaños
   xs:   11,
   sm:   13,
   md:   15,
@@ -68,24 +61,30 @@ export const Typography = {
   xl:   22,
   xxl:  28,
   hero: 38,
+};
 
-  // Alturas de línea
-  tight:  1.2,
-  normal: 1.5,
-  loose:  1.8,
+// ─── Pesos de fuente (tipados correctamente para TypeScript) ──
+export const FontWeights = {
+  regular: '400' as const,
+  medium:  '600' as const,
+  bold:    '700' as const,
+  black:   '900' as const,
 };
 
 // Alias para compatibilidad con componentes anteriores
-export const FontSizes = {
-  xs:   11,
-  sm:   13,
-  md:   15,
-  lg:   18,
-  xl:   22,
-  xxl:  28,
-  hero: 38,
+export const FontSizes = Typography;
+
+// ─── Espaciado ────────────────────────────────────────────
+export const Spacing = {
+  xs:  4,
+  sm:  8,
+  md:  16,
+  lg:  24,
+  xl:  32,
+  xxl: 48,
 };
 
+// ─── Bordes redondeados ───────────────────────────────────
 export const Radii = {
   xs:   6,
   sm:   10,
@@ -96,15 +95,7 @@ export const Radii = {
   full: 999,
 };
 
-export const Spacing = {
-  xs:  4,
-  sm:  8,
-  md:  16,
-  lg:  24,
-  xl:  32,
-  xxl: 48,
-};
-
+// ─── Sombras ──────────────────────────────────────────────
 export const Shadows = {
   sm: {
     shadowColor: '#BE185D',

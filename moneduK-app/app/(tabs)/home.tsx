@@ -4,10 +4,12 @@ import {
   ScrollView, RefreshControl, TouchableOpacity,
   Alert, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
-import { mascotaService, walletService } from '../../services/api';
+import { mascotaService } from '../../services/api';
 import { MascotaDisplay } from '../../components/mascota/MascotaDisplay';
 import { Logo } from '../../components/ui/Logo';
-import { Colors, Typography, Spacing, Radii, Shadows } from '../../constants/theme';
+import { Colors, Fonts, FontWeights, Typography, Spacing, Radii, Shadows } from '../../constants/theme';
+import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalidad';
+
 
 interface Mascota {
   id_mascota: number; nombre: string; salud: number;
@@ -19,12 +21,12 @@ interface HistorialItem {
 }
 
 export default function HomeScreen() {
-  const [mascota,    setMascota]    = useState<Mascota | null>(null);
-  const [historial,  setHistorial]  = useState<HistorialItem[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [mascota,     setMascota]     = useState<Mascota | null>(null);
+  const [historial,   setHistorial]   = useState<HistorialItem[]>([]);
+  const [refreshing,  setRefreshing]  = useState(false);
   const [renombrando, setRenombrando] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
-  const [guardando,  setGuardando]  = useState(false);
+  const [guardando,   setGuardando]   = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -72,7 +74,9 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.pinkMid} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.pinkMid} />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -105,12 +109,12 @@ export default function HomeScreen() {
             </>
           ) : (
             <View style={styles.loadingWrap}>
-              <Text style={{ fontSize: 56 }}>🐷</Text>
+              <Text style={styles.loadingEmoji}>🐷</Text>
               <Text style={styles.loadingText}>Cargando tu mascota...</Text>
             </View>
           )}
         </View>
-
+          <CerditoPersonalidad />
         {/* Barra de XP */}
         {mascota && (
           <View style={styles.xpCard}>
@@ -137,7 +141,7 @@ export default function HomeScreen() {
             <Text style={styles.consejoEmoji}>
               {mascota.salud <= 20 ? '🚨' : mascota.salud <= 50 ? '⚠️' : '💚'}
             </Text>
-            <View style={{ flex: 1 }}>
+            <View style={styles.consejoContent}>
               <Text style={styles.consejoTitle}>
                 {mascota.salud <= 20 ? '¡Tu cerdito necesita ayuda urgente!'
                   : mascota.salud <= 50 ? 'Tu cerdito no está bien'
@@ -163,13 +167,27 @@ export default function HomeScreen() {
                 const subio = h.salud_nueva > h.salud_anterior;
                 const delta = h.salud_nueva - h.salud_anterior;
                 return (
-                  <View key={i} style={[styles.historialItem, i < historial.length - 1 && styles.historialBorder]}>
-                    <View style={[styles.historialDot, { backgroundColor: subio ? Colors.excellent : Colors.critical }]} />
+                  <View
+                    key={i}
+                    style={[
+                      styles.historialItem,
+                      i < historial.length - 1 && styles.historialBorder,
+                    ]}
+                  >
+                    <View style={[
+                      styles.historialDot,
+                      { backgroundColor: subio ? Colors.excellent : Colors.critical },
+                    ]} />
                     <View style={styles.historialInfo}>
-                      <Text style={styles.historialMotivo} numberOfLines={1}>{h.motivo || 'Sin descripción'}</Text>
+                      <Text style={styles.historialMotivo} numberOfLines={1}>
+                        {h.motivo || 'Sin descripción'}
+                      </Text>
                       <Text style={styles.historialFecha}>{formatFecha(h.fecha)}</Text>
                     </View>
-                    <Text style={[styles.historialDelta, { color: subio ? Colors.excellent : Colors.critical }]}>
+                    <Text style={[
+                      styles.historialDelta,
+                      { color: subio ? Colors.excellent : Colors.critical },
+                    ]}>
                       {subio ? '+' : ''}{delta}
                     </Text>
                   </View>
@@ -200,7 +218,7 @@ export default function HomeScreen() {
                 <Text style={styles.cancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.guardarBtn, guardando && { opacity: 0.6 }]}
+                style={[styles.guardarBtn, guardando && styles.guardarBtnDisabled]}
                 onPress={handleRenombrar}
                 disabled={guardando}
               >
@@ -221,8 +239,8 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: Colors.background },
   scroll: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
-  title:  { fontSize: Typography.xl, fontWeight: Typography.black, color: Colors.textPrimary, letterSpacing: -0.3 },
+  header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg },
+  title:        { fontFamily: Fonts.black, fontSize: Typography.xl, color: Colors.textPrimary, letterSpacing: -0.3 },
 
   mascotaCard: {
     backgroundColor: Colors.white,
@@ -247,10 +265,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderMid,
     marginTop: Spacing.sm,
   },
-  renombrarText: { fontSize: Typography.sm, fontWeight: Typography.bold, color: Colors.pinkMid },
+  renombrarText: { fontFamily: Fonts.bold, fontSize: Typography.sm, color: Colors.pinkMid },
 
-  loadingWrap: { alignItems: 'center', padding: Spacing.xl },
-  loadingText: { fontSize: Typography.sm, color: Colors.textMuted, marginTop: Spacing.sm },
+  loadingWrap:  { alignItems: 'center', padding: Spacing.xl },
+  loadingEmoji: { fontSize: 56 },
+  loadingText:  { fontFamily: Fonts.semiBold, fontSize: Typography.sm, color: Colors.textMuted, marginTop: Spacing.sm },
 
   xpCard: {
     backgroundColor: Colors.white,
@@ -262,37 +281,56 @@ const styles = StyleSheet.create({
     ...Shadows.sm,
   },
   xpHeader:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  xpLabel:   { fontSize: Typography.sm, fontWeight: Typography.bold, color: Colors.textPrimary },
-  xpValue:   { fontSize: Typography.sm, fontWeight: Typography.black, color: Colors.yellowDark },
+  xpLabel:   { fontFamily: Fonts.bold,  fontSize: Typography.sm, color: Colors.textPrimary },
+  xpValue:   { fontFamily: Fonts.black, fontSize: Typography.sm, color: Colors.yellowDark },
   xpBarBg:   { height: 12, backgroundColor: Colors.border, borderRadius: Radii.full, overflow: 'hidden', marginBottom: 6 },
   xpBarFill: { height: '100%', backgroundColor: Colors.yellow, borderRadius: Radii.full },
-  xpSub:     { fontSize: Typography.xs, color: Colors.textMuted },
+  xpSub:     { fontFamily: Fonts.semiBold, fontSize: Typography.xs, color: Colors.textMuted },
 
   consejoCard:    { flexDirection: 'row', gap: Spacing.sm, borderRadius: Radii.lg, padding: Spacing.md, marginBottom: Spacing.lg, borderWidth: 1.5, alignItems: 'flex-start' },
   consejoBueno:   { backgroundColor: '#F0FDF4', borderColor: Colors.excellent + '60' },
   consejoMalo:    { backgroundColor: '#FFFBEB', borderColor: Colors.yellow + '80' },
   consejoCritico: { backgroundColor: '#FFF1F2', borderColor: Colors.critical + '60' },
   consejoEmoji:   { fontSize: 24 },
-  consejoTitle:   { fontSize: Typography.sm, fontWeight: Typography.black, color: Colors.textPrimary, marginBottom: 4 },
-  consejoText:    { fontSize: Typography.xs, color: Colors.textSecondary, lineHeight: 18 },
+  consejoContent: { flex: 1 },
+  consejoTitle:   { fontFamily: Fonts.black,    fontSize: Typography.sm, color: Colors.textPrimary, marginBottom: 4 },
+  consejoText:    { fontFamily: Fonts.semiBold, fontSize: Typography.xs, color: Colors.textSecondary, lineHeight: 18 },
 
-  sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.black, color: Colors.textPrimary, marginBottom: Spacing.sm },
-  historialCard: { backgroundColor: Colors.white, borderRadius: Radii.lg, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', ...Shadows.sm },
-  historialItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, padding: Spacing.md },
+  sectionTitle:    { fontFamily: Fonts.black, fontSize: Typography.lg, color: Colors.textPrimary, marginBottom: Spacing.sm },
+  historialCard:   { backgroundColor: Colors.white, borderRadius: Radii.lg, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', ...Shadows.sm },
+  historialItem:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, padding: Spacing.md },
   historialBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
-  historialDot:  { width: 10, height: 10, borderRadius: 5 },
-  historialInfo: { flex: 1 },
-  historialMotivo:{ fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.textPrimary },
-  historialFecha: { fontSize: Typography.xs, color: Colors.textMuted, marginTop: 2 },
-  historialDelta: { fontSize: Typography.md, fontWeight: Typography.black },
+  historialDot:    { width: 10, height: 10, borderRadius: 5 },
+  historialInfo:   { flex: 1 },
+  historialMotivo: { fontFamily: Fonts.semiBold, fontSize: Typography.sm, color: Colors.textPrimary },
+  historialFecha:  { fontFamily: Fonts.regular,  fontSize: Typography.xs, color: Colors.textMuted, marginTop: 2 },
+  historialDelta:  { fontFamily: Fonts.black,    fontSize: Typography.md },
 
-  overlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  modal: { backgroundColor: Colors.white, borderTopLeftRadius: Radii.xl, borderTopRightRadius: Radii.xl, padding: Spacing.xl, ...Shadows.lg },
-  modalTitle:   { fontSize: Typography.lg, fontWeight: Typography.black, color: Colors.textPrimary, marginBottom: Spacing.lg, textAlign: 'center' },
-  modalInput:   { backgroundColor: Colors.pinkLight, borderRadius: Radii.md, borderWidth: 1.5, borderColor: Colors.borderMid, height: 52, paddingHorizontal: Spacing.md, fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.textPrimary, marginBottom: Spacing.md },
-  modalButtons: { flexDirection: 'row', gap: Spacing.sm },
-  cancelBtn:    { flex: 1, height: 52, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: Colors.border },
-  cancelText:   { fontSize: Typography.md, fontWeight: Typography.bold, color: Colors.textMuted },
-  guardarBtn:   { flex: 1, height: 52, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.pinkMid },
-  guardarText:  { fontSize: Typography.md, fontWeight: Typography.bold, color: Colors.white },
+  overlay:  { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modal: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: Radii.xl,
+    borderTopRightRadius: Radii.xl,
+    padding: Spacing.xl,
+    ...Shadows.lg,
+  },
+  modalTitle:        { fontFamily: Fonts.black, fontSize: Typography.lg, color: Colors.textPrimary, marginBottom: Spacing.lg, textAlign: 'center' },
+  modalInput: {
+    backgroundColor: Colors.pinkLight,
+    borderRadius: Radii.md,
+    borderWidth: 1.5,
+    borderColor: Colors.borderMid,
+    height: 52,
+    paddingHorizontal: Spacing.md,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.lg,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  modalButtons:      { flexDirection: 'row', gap: Spacing.sm },
+  cancelBtn:         { flex: 1, height: 52, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: Colors.border },
+  cancelText:        { fontFamily: Fonts.bold, fontSize: Typography.md, color: Colors.textMuted },
+  guardarBtn:        { flex: 1, height: 52, borderRadius: Radii.full, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.pinkMid },
+  guardarBtnDisabled:{ opacity: 0.6 },
+  guardarText:       { fontFamily: Fonts.bold, fontSize: Typography.md, color: Colors.white },
 });
