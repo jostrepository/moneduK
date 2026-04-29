@@ -9,11 +9,11 @@ SET SQL_SAFE_UPDATES  = 0;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ── Base de datos ─────────────────────────────────────────
-CREATE DATABASE IF NOT EXISTS moneduK
+CREATE DATABASE IF NOT EXISTS railway
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE moneduK;
+USE railway;
 
 -- ============================================================
 -- 1. ROLES DE USUARIO
@@ -506,3 +506,4 @@ FROM mision;
 -- ============================================================
 -- FIN DEL SCRIPT UNIFICADO
 -- ============================================================
+
