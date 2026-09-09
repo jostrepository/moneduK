@@ -200,20 +200,20 @@ Todas las respuestas siguen este formato:
 
 ## Estados de la mascota
 
-| Estado    | Salud   | Descripción                              |
-|-----------|---------|------------------------------------------|
-| Excelente | 81–100  | El cerdito está en perfecto estado 🐷✨   |
-| Bien      | 61–80   | El cerdito está saludable y contento     |
-| Regular   | 41–60   | Empieza a sentirse un poco mal           |
-| Malo      | 21–40   | Necesita atención urgente                |
-| Crítico   | 0–20    | Muy mal, hay que mejorar los hábitos     |
+| Estado    | Salud   | Descripción                                                    |
+|-----------|---------|----------------------------------------------------------------|
+| Excelente | 81–100  | El cerdito está en perfecto estado 🐷✨                       |
+| Bien      | 61–80   | El cerdito está saludable y contento                           |
+| Regular   | 41–60   | El cerdito mpieza a sentirse un poco mal                       |
+| Malo      | 21–40   | El cerdito Necesita atención y ayuda urgentes                  |
+| Crítico   | 0–20    | Se encuentra fatal, hay que mejorar los hábitos                |
 
 ---
 
 ## Próximos módulos a implementar
 
-- `POST /api/trabajos/:id/completar` — trabajos virtuales
-- `POST /api/inversiones` — crear inversión
-- `POST /api/apuestas` — registrar apuesta (con impacto negativo forzado)
-- `GET/POST /api/misiones` — retos financieros
-- `GET /api/tienda` + `POST /api/tienda/comprar` — tienda virtual
+- `POST /api/trabajos/:id/completar` — trabajos virtuales (check)
+- `POST /api/inversiones` — crear inversión (check)
+- `POST /api/apuestas` — registrar apuesta (con impacto negativo forzado) (check)
+- `GET/POST /api/misiones` — retos financieros (en proceso)
+- `GET /api/tienda` + `POST /api/tienda/comprar` — tienda virtual (en proceso)

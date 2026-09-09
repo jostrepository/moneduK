@@ -1,20 +1,21 @@
 -- ============================================================
 --  MoneduK — Script Completo Unificado
 --  Incluye: esquema + migración de columnas + datos semilla
---  Ejecutar en MySQL Workbench (desde cero)
+--  Ejecutar en MySQL Workbench
 -- ============================================================
 
--- ── Configuración de sesión ───────────────────────────────
+-- Configuración de sesión
+
 SET SQL_SAFE_UPDATES  = 0;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ── Base de datos ─────────────────────────────────────────
+-- Base de datos
+
 CREATE DATABASE IF NOT EXISTS railway
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE railway;
-
 -- ============================================================
 -- 1. ROLES DE USUARIO
 -- ============================================================
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS tutor_estudiante (
 );
 
 -- ============================================================
--- 4. WALLET (KoinK)
+-- 4. BILLETERA (KoinK)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS wallet (
     id_wallet           INT UNSIGNED    NOT NULL AUTO_INCREMENT,
@@ -98,7 +99,7 @@ CREATE TABLE IF NOT EXISTS transaccion (
 );
 
 -- ============================================================
--- 7. MASCOTAS (CERDITO ALCANCÍA)
+-- 7. MASCOTAS (CERDITO ALCANCÍA ÚNICAMENTE POR EL MOMENTO)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS estado_mascota (
     id_estado       INT UNSIGNED    NOT NULL AUTO_INCREMENT,
@@ -488,7 +489,8 @@ CREATE USER IF NOT EXISTS 'moneduK'@'localhost' IDENTIFIED BY '1234';
 GRANT ALL PRIVILEGES ON moneduK.* TO 'moneduK'@'localhost';
 FLUSH PRIVILEGES;
 
--- ── Restaurar configuración de sesión ────────────────────
+-- Restaurar configuración de sesión
+
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES   = 1;
 

@@ -19,12 +19,15 @@ from sklearn.preprocessing import LabelEncoder
 app = Flask(__name__)
 CORS(app)
 
-# ── Archivos del modelo ───────────────────────────────────
-MODELO_PATH      = "modelo_perfil.pkl"
-ENCODER_PATH     = "encoder_perfil.pkl"
+# Archivos del modelo
+
+MODELO_PATH = "modelo_perfil.pkl"
+ENCODER_PATH = "encoder_perfil.pkl"
 DATOS_REALES_PATH = "datos_reales.json"
 
-# ── Personalidad del cerdito por perfil ───────────────────
+
+# Personalidad del cerdito por perfil
+
 PERSONALIDAD = {
     "Ahorrador": {
         "estado":   "feliz",
@@ -100,7 +103,9 @@ PERSONALIDAD = {
     }
 }
 
-# ── Cargar modelo ─────────────────────────────────────────
+
+# Cargar modelo
+
 def cargar_modelo():
     global modelo, encoder
     print("🐷 MoneduK ML — Cargando modelo...")
@@ -114,7 +119,9 @@ def cargar_modelo():
     print("   ✅ encoder cargado")
     print("✅ Modelo cargado correctamente")
 
-# ── Guardar datos reales para reentrenamiento ─────────────
+
+# Guardar datos reales para reentrenamiento
+
 def guardar_dato_real(features: dict, perfil_predicho: str):
     """
     Guarda los datos del usuario en un archivo JSON.
@@ -134,7 +141,9 @@ def guardar_dato_real(features: dict, perfil_predicho: str):
     with open(DATOS_REALES_PATH, "w") as f:
         json.dump(datos, f)
 
-# ── Reentrenar con datos reales ───────────────────────────
+
+# Reentrenar con datos reales
+
 def reentrenar():
     """
     Combina datos sintéticos + datos reales para reentrenar el modelo.
@@ -172,47 +181,56 @@ def reentrenar():
     modelo_nuevo = DecisionTreeClassifier(max_depth=8, min_samples_split=3, random_state=42)
     modelo_nuevo.fit(X, y_enc)
 
+
     # Guardar nuevo modelo
+    
     with open(MODELO_PATH, "wb") as f:
         pickle.dump(modelo_nuevo, f)
     with open(ENCODER_PATH, "wb") as f:
         pickle.dump(le_nuevo, f)
 
+
     # Recargar en memoria
+
     cargar_modelo()
     print("✅ Modelo reentrenado con datos reales.")
     return True
 
-# ── Inicializar ───────────────────────────────────────────
+
+# Inicializar
+
 cargar_modelo()
 
-# ── Endpoint: predecir perfil ─────────────────────────────
+
+# Endpoint: predecir perfil
+
 @app.route("/predecir", methods=["POST"])
 def predecir():
     try:
         datos = request.get_json()
 
         features = np.array([[
-            datos.get("total_ahorrado",          0),
-            datos.get("num_apuestas",            0),
-            datos.get("num_trabajos",            0),
-            datos.get("num_inversiones",         0),
-            datos.get("num_misiones",            0),
-            datos.get("salud_mascota",          50),
-            datos.get("saldo_actual",            0),
-            datos.get("puntaje_quiz_promedio",   0),
-            datos.get("ratio_gasto",           0.5),
+            datos.get("total_ahorrado", 0),
+            datos.get("num_apuestas", 0),
+            datos.get("num_trabajos", 0),
+            datos.get("num_inversiones", 0),
+            datos.get("num_misiones", 0),
+            datos.get("salud_mascota", 50),
+            datos.get("saldo_actual", 0),
+            datos.get("puntaje_quiz_promedio", 0),
+            datos.get("ratio_gasto", 0.5),
         ]])
 
-        pred_encoded   = modelo.predict(features)[0]
-        perfil         = encoder.inverse_transform([pred_encoded])[0]
+        pred_encoded = modelo.predict(features)[0]
+        perfil = encoder.inverse_transform([pred_encoded])[0]
         probabilidades = modelo.predict_proba(features)[0]
-        confianza      = round(float(max(probabilidades)) * 100, 1)
-
+        confianza = round(float(max(probabilidades)) * 100, 1)
         personalidad = PERSONALIDAD.get(perfil, PERSONALIDAD["Aprendiz"])
-        consejo      = random.choice(personalidad["consejos"])
+        consejo = random.choice(personalidad["consejos"])
 
-        # ── Guardar dato real para aprendizaje futuro ─────
+
+        # Guardar dato real para aprendizaje futuro
+
         guardar_dato_real(
             {k: datos.get(k, 0) for k in [
                 "total_ahorrado", "num_apuestas", "num_trabajos",
@@ -222,7 +240,9 @@ def predecir():
             perfil
         )
 
-        # ── Verificar si reentrenar (cada 20 datos nuevos) ─
+
+        # Verificar si reentrenar (cada 20 datos nuevos)
+
         if os.path.exists(DATOS_REALES_PATH):
             with open(DATOS_REALES_PATH, "r") as ff:
                 try:
@@ -233,19 +253,21 @@ def predecir():
                     pass
 
         return jsonify({
-            "success":   True,
-            "perfil":    perfil,
+            "success": True,
+            "perfil": perfil,
             "confianza": confianza,
-            "estado":    personalidad["estado"],
-            "emoji":     personalidad["emoji"],
-            "titulo":    personalidad["titulo"],
-            "consejo":   consejo,
+            "estado": personalidad["estado"],
+            "emoji": personalidad["emoji"],
+            "titulo": personalidad["titulo"],
+            "consejo": consejo,
         })
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ── Endpoint: forzar reentrenamiento manual ───────────────
+
+# Endpoint: forzar reentrenamiento manual
+
 @app.route("/reentrenar", methods=["POST"])
 def forzar_reentrenamiento():
     exito = reentrenar()
@@ -253,7 +275,9 @@ def forzar_reentrenamiento():
         return jsonify({"success": True, "message": "Modelo reentrenado correctamente"})
     return jsonify({"success": False, "message": "No hay suficientes datos reales (mínimo 10)"}), 400
 
-# ── Endpoint: estadísticas del modelo ────────────────────
+
+# Endpoint: estadísticas del modelo
+
 @app.route("/stats", methods=["GET"])
 def stats():
     n_datos = 0
@@ -264,13 +288,15 @@ def stats():
             except:
                 pass
     return jsonify({
-        "success":           True,
-        "datos_reales":      n_datos,
+        "success": True,
+        "datos_reales": n_datos,
         "proximo_reentrenamiento": max(0, 20 - (n_datos % 20)),
         "perfiles_disponibles": list(PERSONALIDAD.keys()),
     })
 
-# ── Salud del servidor ────────────────────────────────────
+
+# Salud del servidor
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "servicio": "MoneduK ML v2 🐷"})

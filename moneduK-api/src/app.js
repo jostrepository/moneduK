@@ -47,15 +47,17 @@ app.use('/api/minijuegos', minijuegoRoutes);
 app.use('/api/ml',         mlRoutes);
 
 
-// ─── Manejo de errores ────────────────────────────────────
-app.use(notFoundHandler);
-app.use(errorHandler);
+//Manejo de errores 
 
-// ─── Arranque ─────────────────────────────────────────────
-(async () => {
-  await testConnection();
-  app.listen(PORT, () => {
-    console.log(`🚀  MoneduK API escuchando en http://localhost:${PORT}`);
-    console.log(`📋  Ambiente: ${process.env.NODE_ENV || 'development'}`);
-  });
-})();
+    app.use(notFoundHandler);
+    app.use(errorHandler);
+
+// Arranque 
+
+    (async () => {
+      await testConnection();
+      app.listen(PORT, () => {
+        console.log(`🚀  MoneduK API escuchando en http://localhost:${PORT}`);
+        console.log(`📋  Ambiente: ${process.env.NODE_ENV || 'development'}`);
+      });
+    })();
