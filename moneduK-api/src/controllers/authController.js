@@ -5,9 +5,34 @@ const R = require('../utils/response');
 
 // Helpers
 
-    jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    });
+/**
+ * Genera un token JWT firmado para un usuario autenticado.
+ *
+ * IMPORTANTE: las propiedades de "usuario" deben coincidir EXACTAMENTE
+ * con las que se le pasan al llamar esta función desde register/login
+ * (id_usuario, email, id_rol). Si los nombres no coinciden, las
+ * propiedades del payload quedan undefined y jsonwebtoken las descarta
+ * silenciosamente al firmar, generando un token "vacío" (solo con iat/exp)
+ * que rompe cualquier ruta protegida por authMiddleware, ya que
+ * req.user.id_usuario terminaría siendo undefined.
+ *
+ * @param {Object} usuario - datos mínimos del usuario para el payload
+ * @param {number} usuario.id_usuario - ID numérico del usuario en la BD
+ * @param {string} usuario.email - correo del usuario
+ * @param {number} usuario.id_rol - rol del usuario (1=estudiante, 2=tutor)
+ * @returns {string} token JWT firmado, válido por JWT_EXPIRES_IN
+ */
+function generarToken(usuario) {
+  const payload = {
+    id_usuario: usuario.id_usuario, // antes: usuario.id (no existía → undefined)
+    email: usuario.email,           // antes: usuario.correo (no existía → undefined)
+    id_rol: usuario.id_rol,         // antes: usuario.rol (no existía → undefined)
+  };
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  });
+}
 
 // Registro 
 
