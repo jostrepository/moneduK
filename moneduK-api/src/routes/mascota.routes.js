@@ -1,4 +1,4 @@
-//Ruta del apartado de mascota
+// Ruta del apartado de mascota
 
 const router = require('express').Router();
 const { body } = require('express-validator');
@@ -6,17 +6,19 @@ const { getMiMascota, aplicarImpacto, renombrarMascota, getHistorial } = require
 const { authMiddleware } = require('../middlewares/auth');
 const { validate } = require('../middlewares/validate');
 
+// Exige un JWT válido antes de continuar, y protege todas las rutas de este archivo.
+
     router.use(authMiddleware);
 
-// GET /mascota
+// GET /mascota: Devuelve el estado actual de la mascota del usuario autenticado (salud, nivel, experiencia).
 
     router.get('/', getMiMascota);
 
-// GET /mascota/historial
+// GET /mascota/historial: Devuelve el historial de cambios de salud registrados para la mascota.
 
     router.get('/historial', getHistorial);
 
-// PATCH /mascota/impacto
+// PATCH /mascota/impacto: Aplica un cambio de salud (positivo o negativo) a la mascota, con un motivo opcional.
 
     router.patch(
       '/impacto',
@@ -32,7 +34,7 @@ const { validate } = require('../middlewares/validate');
       aplicarImpacto
     );
 
-// PATCH /mascota/nombre
+// PATCH /mascota/nombre: Cambia el nombre que el usuario le puso a su mascota.
 
     router.patch(
       '/nombre',

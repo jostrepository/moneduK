@@ -1,5 +1,3 @@
-//Catálogo de los accesorios customizables del cerdito con KoinK, filtrable por categoría.
-
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, FlatList,
@@ -8,193 +6,244 @@ import {
 import { tiendaService, walletService } from '../../services/api';
 import { Colors, FontSizes, Spacing, Radii, Shadows } from '../../constants/theme';
 
-    interface Producto {
-          id_producto: number;
-          nombre: string;
-          descripcion: string;
-          precio_koin: number;
-          imagen_url: string | null;
-          categoria: string;
-      }
 
-    export default function TiendaScreen() {
-      const [productos, setProductos] = useState<Producto[]>([]);
-      const [saldo, setSaldo] = useState(0);
-      const [loading, setLoading] = useState(true);
-      const [comprando, setComprando] = useState<number | null>(null);
-      const [resultado, setResultado] = useState<any>(null);
-      const [categoriaActiva, setCategoriaActiva] = useState('Todas');
+// Definimos la estructura base que moldeará los productos recibidos del backend,
+// garantizando un tipado estricto para evitar errores de renderizado en pantalla.
 
-      const fetchData = async () => {
-        try {
-          const [pRes, wRes] = await Promise.all([
-            tiendaService.getProductos(),
-            walletService.getMiWallet(), ]);
+interface Producto {
+  id_producto: number;
+  nombre: string;
+  descripcion: string;
+  precio_koin: number;
+  imagen_url: string | null;
+  categoria: string;
+}
 
-          setProductos(pRes.data.data);
-          setSaldo(Number(wRes.data.data.saldo));
-        } catch {
-          Alert.alert('Error', 'No se pudo cargar la tienda');
-        } finally {
-          setLoading(false);
-        }
-    };
 
-      useEffect(() => { fetchData(); }, []);
+// Inicializamos la vista de la tienda configurando los estados de carga e inventario,
+// permitiendo adquirir y equipar los distintos accesorios visuales del cerdito.
 
-      const categorias = ['Todas', ...Array.from(new Set(productos.map(p => p.categoria)))];
-      const productosFiltrados = categoriaActiva === 'Todas'
-        ? productos
-        : productos.filter(p => p.categoria === categoriaActiva);
+export default function TiendaScreen() {
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [misCompras, setMisCompras] = useState<any[]>([]);
+  const [saldo, setSaldo] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [comprando, setComprando] = useState<number | null>(null);
+  const [resultado, setResultado] = useState<any>(null);
+  const [categoriaActiva, setCategoriaActiva] = useState('Todas');
 
-      const handleComprar = (producto: Producto) => {
-        if (saldo < producto.precio_koin) {
-          Alert.alert('KoinK insuficientes 😕', `Necesitas ${producto.precio_koin} KoinK. Tienes ${saldo.toFixed(0)}.`);
-          return;
-        }
-        Alert.alert(
-          '¿Confirmar compra?',
-          `¿Comprar "${producto.nombre}" por ${producto.precio_koin} KoinK?`,
-          [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Comprar 🛍️', onPress: () => confirmarCompra(producto) },
-          ]
-        );
-      };
 
-      const confirmarCompra = async (producto: Producto) => {
-        setComprando(producto.id_producto);
-        try {
-          const res = await tiendaService.comprar(producto.id_producto);
-          const data = res.data.data;
-          setSaldo(Number(data.saldo_nuevo));
-          setResultado({ producto, data });
-        } catch (err: any) {
-          Alert.alert('Error', err.response?.data?.message || 'No se pudo completar la compra');
-        } finally {
-          setComprando(null);
-        }
-      };
+// Extraemos asíncronamente los productos, el saldo y las compras en una sola llamada,
+// optimizando los tiempos de carga y actualizando la interfaz simultáneamente.
 
-      const CATEGORIA_EMOJI: Record<string, string> = {
-        'Accesorios para la mascota': '🎩',
-        'Fondos de pantalla': '🖼️',
-        'Marcos de perfil': '🔲',
-        'Efectos especiales': '✨',
-      };
+  const fetchData = async () => {
+    try {
+      const [pRes, wRes, cRes] = await Promise.all([
+        tiendaService.getProductos(),
+        walletService.getMiWallet(),
+        tiendaService.getMisCompras(),
+      ]);
 
-      const renderProducto = ({ item }: { item: Producto }) => {
-        const puedeComprar = saldo >= item.precio_koin;
-        return (
-          <View style={[styles.card, !puedeComprar && styles.cardDisabled]}>
-            <View style={styles.cardIconWrap}>
-              <Text style={styles.cardIcon}>
-                {CATEGORIA_EMOJI[item.categoria] || '🛍️'}
-              </Text>
-            </View>
-            <Text style={styles.cardNombre}>{item.nombre}</Text>
-            <Text style={styles.cardDesc} numberOfLines={2}>{item.descripcion}</Text>
-            <View style={styles.precioRow}>
-              <Text style={[styles.precio, !puedeComprar && styles.precioRojo]}>
-                🪙 {item.precio_koin}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.btn, !puedeComprar && styles.btnDisabled]}
-              onPress={() => handleComprar(item)}
-              disabled={comprando !== null || !puedeComprar}
-            >
-              {comprando === item.id_producto
-                ? <ActivityIndicator color={Colors.white} size="small" />
-                : <Text style={styles.btnText}>{puedeComprar ? 'Comprar' : 'Sin KoinK'}</Text>
-              }
-            </TouchableOpacity>
-          </View>
-        );
-      };
+      setProductos(pRes.data.data);
+      setSaldo(Number(wRes.data.data.saldo));
+      setMisCompras(cRes.data.data);
+    } catch {
+      Alert.alert('Error', 'No se pudo cargar la tienda');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (loading) {
-        return (
-          <SafeAreaView style={styles.safe}>
-            <ActivityIndicator size="large" color={Colors.pinkMid} style={{ marginTop: 80 }} />
-          </SafeAreaView>
-        );
-      }
+  useEffect(() => { fetchData(); }, []);
+
+  const categorias = ['Todas', ...Array.from(new Set(productos.map(p => p.categoria)))];
+  const productosFiltrados = categoriaActiva === 'Todas'
+    ? productos
+    : productos.filter(p => p.categoria === categoriaActiva);
+
+
+// Protegemos la transacción comparando numéricamente el saldo contra el precio,
+// lanzando una alerta de confirmación solo si el usuario dispone de fondos suficientes.
+
+  const handleComprar = async (producto: Producto) => {
+    // 1. Verificamos que el clic entra a la función
+    console.log('\n--- CLIC REGISTRADO ---');
+    console.log('Intentando comprar:', producto.nombre);
+    console.log('Mi Saldo:', saldo, '| Precio:', producto.precio_koin);
+
+    // 2. Validación de dinero
+    if (Number(saldo) < Number(producto.precio_koin)) {
+      console.log('❌ Rechazado: Saldo insuficiente');
+      Alert.alert('Saldo insuficiente', 'No tienes suficientes KoinKs.');
+      return;
+    }
+
+    console.log('✅ Saldo OK. Enviando petición a la base de datos...');
+    
+    // 3. Ejecutamos la compra DIRECTAMENTE, sin la alerta de confirmación
+    await confirmarCompra(producto);
+  };
+
+
+// Consumimos el servicio de compra y refrescamos el inventario local inmediatamente,
+// brindando una respuesta visual rápida y bloqueando clics dobles mientras procesamos.
+
+  const confirmarCompra = async (producto: Producto) => {
+    setComprando(producto.id_producto);
+    try {
+      const res = await tiendaService.comprar(producto.id_producto);
+      const data = res.data.data;
+      setSaldo(Number(data.saldo_nuevo));
+      setResultado({ producto, data });
+      const cRes = await tiendaService.getMisCompras();
+      setMisCompras(cRes.data.data);
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.message || 'No se pudo completar la compra');
+    } finally {
+      setComprando(null);
+    }
+  };
+
+
+// Disparamos la actualización del atuendo en el servidor alternando su estado de uso,
+// sincronizando posteriormente el listado de compras para reflejar el cambio.
+
+  const handleEquipar = async (idCompra: number, equipar: boolean) => {
+    try {
+      await tiendaService.equipar(idCompra, equipar);
+      const cRes = await tiendaService.getMisCompras();
+      setMisCompras(cRes.data.data);
+    } catch (err: any) {
+      Alert.alert('Error', 'No se pudo actualizar el accesorio de tu mascota');
+    }
+  };
+
+
+// Construimos la tarjeta de cada artículo evaluando si el usuario ya posee el elemento,
+// intercambiando inteligentemente los botones de compra por acciones de equipamiento.
+
+const renderProducto = ({ item }: { item: Producto }) => {
+    // Conversión segura para el renderizado del botón
+    const saldoActual = parseFloat(saldo.toString());
+    const precio = parseFloat(item.precio_koin.toString());
+    const puedeComprar = saldoActual >= precio;
+    const compraActiva = misCompras.find(c => c.id_producto === item.id_producto);
+
+    return (
+      <View style={[styles.card, !puedeComprar && !compraActiva && styles.cardDisabled]}>
+        <View style={styles.cardIconWrap}>
+          <Text style={styles.cardIcon}>
+            {item.imagen_url || '🛍️'}
+          </Text>
+        </View>
+        <Text style={styles.cardNombre}>{item.nombre}</Text>
+        <Text style={styles.cardDesc} numberOfLines={2}>{item.descripcion}</Text>
+        <View style={styles.precioRow}>
+          <Text style={[styles.precio, !puedeComprar && !compraActiva && styles.precioRojo]}>
+            {compraActiva ? 'Adquirido ✨' : `🪙 ${item.precio_koin}`}
+          </Text>
+        </View>
+        
+          {compraActiva ? (
+          <TouchableOpacity
+            style={[styles.btn, compraActiva.equipado ? styles.btnDesequipar : styles.btnEquipar]}
+            onPress={() => handleEquipar(compraActiva.id_compra, !compraActiva.equipado)}
+          >
+            <Text style={styles.btnText}>
+              {compraActiva.equipado ? 'Desequipar ❌' : 'Equipar 👕'}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.btn, !puedeComprar && styles.btnDisabled]}
+            onPress={() => handleComprar(item)}
+            // 👇 EL CAMBIO ESTÁ AQUÍ: Quitamos el "|| !puedeComprar" para que reciba el clic
+            disabled={comprando === item.id_producto}
+          >
+            {comprando === item.id_producto
+              ? <ActivityIndicator color={Colors.white} size="small" />
+              : <Text style={styles.btnText}>{puedeComprar ? 'Comprar 🛒' : 'Sin KoinK'}</Text>
+            }
+          </TouchableOpacity>
+        )}  
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator size="large" color={Colors.pinkMid} style={{ marginTop: 80 }} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Tienda 🏪</Text>
+        <View style={styles.saldoBadge}>
+          <Text style={styles.saldoText}>🪙 {Number(saldo).toFixed(0)}</Text>
+        </View>
+      </View>
 
-      {/* Header */}
+      <FlatList
+        data={categorias}
+        keyExtractor={item => item}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtros}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.filtroBtn, categoriaActiva === item && styles.filtroBtnActive]}
+            onPress={() => setCategoriaActiva(item)}
+          >
+            <Text style={[styles.filtroText, categoriaActiva === item && styles.filtroTextActive]}>
+              {item}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
 
-          <View style={styles.header}>
-            <Text style={styles.title}>Tienda 🏪</Text>
-            <View style={styles.saldoBadge}>
-              <Text style={styles.saldoText}>🪙 {Number(saldo).toFixed(0)}</Text>
-            </View>
+      <FlatList
+        data={productosFiltrados}
+        keyExtractor={item => String(item.id_producto)}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        renderItem={renderProducto}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyEmoji}>🛒</Text>
+            <Text style={styles.emptyText}>No hay productos en esta categoría</Text>
           </View>
+        }
+      />
 
-      {/* Filtro de categorías */}
-
-          <FlatList
-            data={categorias}
-            keyExtractor={item => item}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtros}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.filtroBtn, categoriaActiva === item && styles.filtroBtnActive]}
-                onPress={() => setCategoriaActiva(item)}
-              >
-                <Text style={[styles.filtroText, categoriaActiva === item && styles.filtroTextActive]}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-
-      {/* Grid de productos */}
-
-          <FlatList
-            data={productosFiltrados}
-            keyExtractor={item => String(item.id_producto)}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            renderItem={renderProducto}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={
-              <View style={styles.empty}>
-                <Text style={styles.emptyEmoji}>🛒</Text>
-                <Text style={styles.emptyText}>No hay productos en esta categoría</Text>
-              </View>
-            }
-          />
-
-      {/* Modal de compra exitosa */}
-      
-          <Modal visible={!!resultado} transparent animationType="fade">
-            <View style={styles.overlay}>
-              <View style={styles.modal}>
-                <Text style={styles.modalEmoji}>🎉</Text>
-                <Text style={styles.modalTitle}>¡Compra exitosa!</Text>
-                <Text style={styles.modalItem}>{resultado?.producto?.nombre}</Text>
-                <Text style={styles.modalSaldo}>
-                  Saldo restante: 🪙 {Number(resultado?.data?.saldo_nuevo).toFixed(0)} KoinK
-                </Text>
-                <TouchableOpacity style={styles.modalBtn} onPress={() => setResultado(null)}>
-                  <Text style={styles.modalBtnText}>¡Genial! 🐷</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        </SafeAreaView>
-      );
-  }
+      <Modal visible={!!resultado} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalEmoji}>🎉</Text>
+            <Text style={styles.modalTitle}>¡Compra exitosa!</Text>
+            <Text style={styles.modalItem}>{resultado?.producto?.nombre}</Text>
+            <Text style={styles.modalSaldo}>
+              Saldo restante: 🪙 {Number(resultado?.data?.saldo_nuevo).toFixed(0)} KoinK
+            </Text>
+            <TouchableOpacity style={styles.modalBtn} onPress={() => setResultado(null)}>
+              <Text style={styles.modalBtnText}>¡Genial! 🐷</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
 
 
+// Proveemos los estilos estructurales de los contenedores, botones y ventanas modales,
+// separando la capa visual para mantener la limpieza semántica del componente general.
 
 const styles = StyleSheet.create({
-  
   safe: { flex: 1, backgroundColor: Colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.sm },
   title: { fontSize: FontSizes.xl, fontWeight: '900', color: Colors.textPrimary },
@@ -222,6 +271,8 @@ const styles = StyleSheet.create({
 
   btn: { backgroundColor: Colors.pinkMid, borderRadius: Radii.full, height: 36, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', width: '100%' },
   btnDisabled: { backgroundColor: Colors.textMuted },
+  btnEquipar: { backgroundColor: Colors.excellent },
+  btnDesequipar: { backgroundColor: Colors.error },
   btnText: { fontSize: FontSizes.xs, fontWeight: '700', color: Colors.white },
 
   empty: { alignItems: 'center', paddingTop: Spacing.xxl },
@@ -236,5 +287,4 @@ const styles = StyleSheet.create({
   modalSaldo: { fontSize: FontSizes.sm, color: Colors.textSecondary, fontWeight: '600', marginBottom: Spacing.lg },
   modalBtn:  { backgroundColor: Colors.pinkMid, borderRadius: Radii.full, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, width: '100%', alignItems: 'center' },
   modalBtnText: { fontSize: FontSizes.md, fontWeight: '700', color: Colors.white },
-
 });

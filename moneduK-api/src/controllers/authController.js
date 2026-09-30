@@ -7,15 +7,6 @@ const R = require('../utils/response');
 
 /**
  * Genera un token JWT firmado para un usuario autenticado.
- *
- * IMPORTANTE: las propiedades de "usuario" deben coincidir EXACTAMENTE
- * con las que se le pasan al llamar esta función desde register/login
- * (id_usuario, email, id_rol). Si los nombres no coinciden, las
- * propiedades del payload quedan undefined y jsonwebtoken las descarta
- * silenciosamente al firmar, generando un token "vacío" (solo con iat/exp)
- * que rompe cualquier ruta protegida por authMiddleware, ya que
- * req.user.id_usuario terminaría siendo undefined.
- *
  * @param {Object} usuario - datos mínimos del usuario para el payload
  * @param {number} usuario.id_usuario - ID numérico del usuario en la BD
  * @param {string} usuario.email - correo del usuario
@@ -23,11 +14,19 @@ const R = require('../utils/response');
  * @returns {string} token JWT firmado, válido por JWT_EXPIRES_IN
  */
 function generarToken(usuario) {
+  
+  // Empaquetamos los identificadores críticos del usuario en un payload cifrado
+  // definiendo sus fronteras de autorización sin saturar el tamaño de la cabecera.
+
   const payload = {
-    id_usuario: usuario.id_usuario, // antes: usuario.id (no existía → undefined)
-    email: usuario.email,           // antes: usuario.correo (no existía → undefined)
-    id_rol: usuario.id_rol,         // antes: usuario.rol (no existía → undefined)
+    id_usuario: usuario.id_usuario, 
+    email: usuario.email,           
+    id_rol: usuario.id_rol,        
   };
+
+
+  // Firmamos el paquete utilizando el algoritmo encriptado respaldado por la variable de entorno
+  // sellando su ciclo de vida útil (7 días) para invalidar accesos en sesiones muertas.
 
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
@@ -53,7 +52,11 @@ function generarToken(usuario) {
           id_rol = 1, // 1 = estudiante por defecto
       } = req.body;
 
+
     // Verificar email único
+
+        // Escaneamos las direcciones activas para bloquear intentos de clonación
+        // asegurando la unicidad absoluta requerida por la arquitectura relacional.
 
         const [existe] = await conn.query(
           'SELECT id_usuario FROM usuario WHERE email = ?',
@@ -63,11 +66,19 @@ function generarToken(usuario) {
           return R.conflict(res, 'El correo electrónico ya está registrado');
         }
 
+
+        // Camuflamos la contraseña en un hash dinámico basado en saltos de procesamiento
+        // protegiendo el factor de autenticación frente a fugas de la base de datos.
+
         const hash = await bcrypt.hash(contrasena, Number(process.env.BCRYPT_ROUNDS) || 10);
 
         await conn.beginTransaction();
 
+        
     // 1. Insertar usuario
+
+        // Inyectamos la matriz de identidad base mapeando los perfiles (rol)
+        // y reteniendo el ID serial entregado para la construcción de los módulos satélite.
 
         const [userResult] = await conn.query(
           `INSERT INTO usuario (id_rol, nombre, apellido, email, contrasena_hash, fecha_nacimiento)
@@ -76,14 +87,22 @@ function generarToken(usuario) {
         );
         const id_usuario = userResult.insertId;
 
+
     // 2. Crear wallet
+
+        // Acoplamos una billetera virgen a la llave principal del nuevo usuario
+        // para dar por inaugurada su participación en la microeconomía del proyecto.
 
         await conn.query(
           'INSERT INTO wallet (id_usuario) VALUES (?)',
           [id_usuario]
         );
 
+
     // 3. Si es estudiante, crear mascota con estado "Excelente" (id_estado = 1)
+
+        // Condicionamos la creación del compañero virtual exclusivamente a los perfiles de estudiantes
+        // para que los tutores tengan un panel administrativo limpio sin cruce de mecánicas lúdicas.
 
         if (Number(id_rol) === 1) {
           await conn.query(
@@ -94,6 +113,8 @@ function generarToken(usuario) {
 
         await conn.commit();
 
+        // Materializamos el JWT de bienvenida con la estructura predefinida
+        // permitiendo que el cliente inicie sesión de golpe sin re-autenticar.
         const token = generarToken({ id_usuario, email, id_rol: Number(id_rol) });
 
         return R.created(res, { token, id_usuario }, 'Usuario registrado é xitosamente');
@@ -115,6 +136,10 @@ function generarToken(usuario) {
       try {
         const { email, contrasena } = req.body;
 
+
+        // Rastreamos los metadatos y credenciales encriptadas del solicitante
+        // cruzándolos bajo el correo como llave de autenticación principal.
+
         const [rows] = await pool.query(
           `SELECT u.id_usuario, u.id_rol, u.nombre, u.apellido, u.email,
               u.contrasena_hash, u.activo
@@ -129,14 +154,26 @@ function generarToken(usuario) {
 
         const user = rows[0];
 
+
+        // Frenamos secamente la ejecución si el perfil fue suspendido por administración
+        // truncando cualquier riesgo de acceso de cuentas baneadas o irregulares.
+
         if (!user.activo) {
           return R.unauthorized(res, 'Cuenta desactivada. Contacta con soporte.');
         }
+
+
+        // Contrastamos la contraseña enviada en crudo contra el hash resguardado
+        // validados por el propio encriptador usando el algoritmo criptográfico nativo.
 
         const passwordOk = await bcrypt.compare(contrasena, user.contrasena_hash);
         if (!passwordOk) {
           return R.unauthorized(res, 'Credenciales incorrectas');
         }
+
+
+        // Desencadenamos la firma de la nueva sesión inyectando los datos de identidad
+        // para empaquetarlos en la cabecera portadora que consumirá el cliente móvil.
 
         const token = generarToken({
           id_usuario: user.id_usuario,
@@ -167,6 +204,11 @@ function generarToken(usuario) {
 
     const me = async (req, res) => {
       try {
+
+        // Enlazamos los datos biográficos de raíz con la tabla jerárquica de roles
+        // sumando su capital y métricas de billetera mediante intersecciones condicionales (LEFT JOIN).
+
+
         const [rows] = await pool.query(
           `SELECT u.id_usuario, u.nombre, u.apellido, u.email,
               u.fecha_nacimiento, u.avatar_url, u.fecha_registro,

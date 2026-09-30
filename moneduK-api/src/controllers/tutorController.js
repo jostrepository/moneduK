@@ -8,6 +8,9 @@ const R = require('../utils/response');
 
     const getMisEstudiantes = async (req, res) => {
       try {
+
+        // Recolectamos la lista de alumnos bajo la tutoría cruzando tablas relacionales
+        // para proveer un panorama centralizado del estado financiero y vital de cada uno.
         const [rows] = await pool.query(
           `SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.fecha_nacimiento,
               te.tipo_relacion, te.fecha_vinculo,
@@ -40,6 +43,8 @@ const R = require('../utils/response');
 
     // Buscar estudiante
 
+        // Verificamos la existencia de un alumno activo utilizando su correo como filtro
+        // para garantizar que la solicitud de enlace no intente conectar con tutores.
         const [estudiantes] = await pool.query(
           `SELECT id_usuario FROM usuario WHERE email = ? AND id_rol = 1`,
           [email_estudiante]
@@ -52,6 +57,8 @@ const R = require('../utils/response');
 
     // Evitar duplicados
 
+        // Validamos la tabla conectora para abortar registros previamente establecidos
+        // evitando redundancia de datos o superposición de permisos de supervisión.
         const [existe] = await pool.query(
           'SELECT 1 FROM tutor_estudiante WHERE id_tutor = ? AND id_estudiante = ?',
           [req.user.id_usuario, id_estudiante]
@@ -60,6 +67,8 @@ const R = require('../utils/response');
           return R.conflict(res, 'El estudiante ya está vinculado a este tutor');
         }
 
+        // Formalizamos la relación de supervisión insertando el registro en la base de datos
+        // habilitando automáticamente el acceso a los datos de progreso del alumno en cuestión.
         await pool.query(
           'INSERT INTO tutor_estudiante (id_tutor, id_estudiante, tipo_relacion) VALUES (?,?,?)',
           [req.user.id_usuario, id_estudiante, tipo_relacion]
@@ -82,12 +91,16 @@ const R = require('../utils/response');
 
     // Verificar que el estudiante pertenece a este tutor
 
+        // Ejecutamos una capa de autorización estricta sobre la jerarquía de supervisión
+        // bloqueando intentos de espiar el progreso de cuentas no vinculadas oficialmente.
         const [vinculo] = await pool.query(
           'SELECT 1 FROM tutor_estudiante WHERE id_tutor = ? AND id_estudiante = ?',
           [req.user.id_usuario, id]
         );
         if (vinculo.length === 0) return R.forbidden(res, 'No tienes acceso a este estudiante');
 
+        // Extraemos los indicadores clave del alumno englobando finanzas y cuidado virtual
+        // para popular el dashboard analítico del supervisor con datos actualizados.
         const [[usuario]] = await pool.query(
           `SELECT u.nombre, u.apellido, u.email,
               w.saldo, w.total_ganado, w.total_gastado,
@@ -101,12 +114,16 @@ const R = require('../utils/response');
           [id]
         );
 
+        // Contabilizamos el volumen de logros educativos aprobados por el estudiante
+        // para que el tutor pueda medir de forma cuantitativa el esfuerzo académico.
         const [lecciones] = await pool.query(
           `SELECT COUNT(*) AS total_completadas FROM progreso_leccion
           WHERE id_usuario = ? AND completada = 1`,
           [id]
         );
 
+        // Trazamos el comportamiento económico del joven listando sus últimos movimientos
+        // aislando si el flujo fue positivo o negativo para evidenciar patrones de gasto.
         const [transacciones] = await pool.query(
           `SELECT t.monto, t.descripcion, t.fecha, tt.nombre AS tipo, tt.es_positivo
           FROM transaccion t

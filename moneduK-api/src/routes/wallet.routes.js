@@ -6,13 +6,15 @@ const { getMiWallet, getTransacciones, registrarTransaccion } = require('../cont
 const { authMiddleware } = require('../middlewares/auth');
 const { validate } = require('../middlewares/validate');
 
+// router.use(authMiddleware): Exige un JWT válido antes de continuar; protege todas las rutas de este archivo.
+
     router.use(authMiddleware);
 
-// GET /wallet
+// GET /wallet: GET /wallet → Consulta el saldo y los totales (ganado/gastado) de la billetera del usuario.
 
     router.get('/', getMiWallet);
 
-// GET /wallet/transacciones
+// GET /wallet/transacciones: Lista el historial de transacciones del usuario, paginado con limit y offset.
 
     router.get(
       '/transacciones',
@@ -24,7 +26,7 @@ const { validate } = require('../middlewares/validate');
       getTransacciones
     );
 
-// POST /wallet/transaccion
+// POST /wallet/transaccion: Registra manualmente una transacción (monto, tipo y descripción) en la billetera.
 
     router.post(
       '/transaccion',

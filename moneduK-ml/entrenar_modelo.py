@@ -27,6 +27,9 @@ print("🐷 MoneduK Machine Learning, Generando datos de entrenamiento...")
 # Generar datos sintéticos realistas
 # Cada fila representa el comportamiento acumulado de un usuario
 
+  # Simulamos un dataframe inicial para entrenar el modelo en frío (cold start)
+  # inyectando datos aleatorios que representan el flujo esperado en la aplicación.
+
 data = {
     # KoinK ahorrados en total
     "total_ahorrado": np.random.randint(0, 2000, N),
@@ -61,6 +64,10 @@ df = pd.DataFrame(data)
 
 # Función para asignar perfil según comportamiento 
 def asignar_perfil(row):
+
+  # Extrajimos cada variable de la fila para procesar las condiciones lógicas
+  # y así etiquetar al usuario en su respectiva clasificación de comportamiento.
+
     ahorro = row["total_ahorrado"]
     apuestas = row["num_apuestas"]
     trabajos = row["num_trabajos"]
@@ -103,6 +110,9 @@ print(df["perfil"].value_counts())
 
 # Preparar features y etiquetas
 
+  # Desacoplamos la variable objetivo del dataset de características (features)
+  # y codificamos las etiquetas categóricas para que el algoritmo pueda procesarlas.
+
 X = df.drop(columns=["perfil"])
 y = df["perfil"]
 
@@ -112,12 +122,18 @@ y_encoded = le.fit_transform(y)
 
 # Dividir en entrenamiento y prueba
 
+  # Fragmentamos el conjunto de datos separando un 20% para el lote de pruebas
+  # garantizando así una evaluación objetiva sobre información no vista por el modelo.
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y_encoded, test_size=0.2, random_state=42
 )
 
 
 # Entrenar modelo (árbol de decisión)
+
+  # Instanciamos y entrenamos el clasificador limitando la profundidad de las ramas
+  # para prevenir el sobreajuste (overfitting) y mantener reglas de decisión legibles.
 
 print("\n🧠 Entrenando modelo de clasificación...")
 modelo = DecisionTreeClassifier(
@@ -130,6 +146,9 @@ modelo.fit(X_train, y_train)
 
 # Evaluar el modelo
 
+  # Confrontamos las predicciones del modelo contra las etiquetas reales separadas
+  # para imprimir un reporte estadístico detallado sobre la precisión del algoritmo.
+
 y_pred = modelo.predict(X_test)
 print("\n📈 Reporte de clasificación:")
 print(classification_report(
@@ -139,6 +158,9 @@ print(classification_report(
 
 
 # Guardar el modelo y encoder
+
+  # Serializamos el árbol de decisión y el codificador en archivos binarios (.pkl)
+  # dejándolos listos para ser consumidos por el servidor Flask en tiempo de ejecución.
 
 import pickle
 with open("modelo_perfil.pkl", "wb") as f:

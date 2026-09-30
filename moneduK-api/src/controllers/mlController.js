@@ -6,6 +6,7 @@ const axios = require('axios');
 
 const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
 
+
 // Obtener perfil y consejo del cerdito 
 
 /**
@@ -19,8 +20,12 @@ const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
       try {
         const id_usuario = req.user.id_usuario;
 
+
     // 1. Recopilar datos del usuario desde MySQL 
 
+        // Orquestamos múltiples subconsultas a los diversos módulos transaccionales
+        // consolidando el mapa completo de interacción del usuario con la economía de la app.
+        
         const [walletRows] = await pool.query(
           `SELECT saldo, total_ganado, total_gastado
           FROM wallet WHERE id_usuario = ?`,
@@ -62,7 +67,11 @@ const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
           [id_usuario]
         );
 
+
     // 2. Calcular features
+
+        // Sanitizamos y estructuramos los volúmenes de datos extraídos
+        // previendo valores nulos para garantizar que la aritmética posterior no quiebre.
 
         const wallet = walletRows[0] || { saldo: 0, total_ganado: 0, total_gastado: 0 };
         const salud = mascotaRows[0]?.salud ?? 50;
@@ -72,13 +81,21 @@ const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
         const num_misiones = misionesRows[0]?.total   ?? 0;
         const puntaje_quiz = parseFloat(quizRows[0]?.promedio ?? 0).toFixed(1);
 
+
+        // Computamos la tasa de consumo aplicando un margen máximo de 100% (1)
+        // estableciendo la métrica clave para que la red neuronal evalúe la moderación del gasto.
+
         const total_ganado = Number(wallet.total_ganado)  || 1;
         const total_gastado = Number(wallet.total_gastado) || 0;
         const ratio_gasto = parseFloat(
           Math.min(total_gastado / total_ganado, 1).toFixed(2)
         );
 
+
     // Ahorro estimado = ingresos por trabajos/lecciones/misiones
+
+        // Empaquetamos las variables consolidadas en el formato estricto que requiere el modelo predictivo
+        // actuando como puente traductor entre el ecosistema relacional (MySQL) y el microservicio (Python).
 
         const total_ahorrado = Math.max(0, Number(wallet.saldo));
 
@@ -94,16 +111,25 @@ const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
             ratio_gasto,
         };
 
+
     // 3. Consultar modelo ML en Flask
 
         let mlResponse;
         try {
+
+          // Lanzamos el array de comportamientos al endpoint de inteligencia artificial
+          // imponiendo un límite de tiempo para no trabar la experiencia del usuario si el modelo tarda.
+
           mlResponse = await axios.post(`${ML_URL}/predecir`, features, {
             timeout: 5000,
           });
         } catch (mlErr) {
 
+
       // Si Flask no está disponible, retornar perfil neutro
+
+          // Implementamos una cláusula de salvavidas (fallback) si el microservicio falla o colapsa
+          // entregando un perfil comodín que permita a la aplicación seguir operando sin bloqueos visuales.
 
           return R.ok(res, {
               perfil: 'Aprendiz',
@@ -118,7 +144,11 @@ const ML_URL = process.env.ML_URL || 'http://127.0.0.1:5001';
 
         const ml = mlResponse.data;
 
+
     // 4. Retornar resultado al frontend
+
+        // Emitimos la respuesta final amalgamando el dictamen analítico de la inteligencia artificial
+        // y adjuntamos las variables crudas procesadas por si se requiere depuración en el cliente.
 
         return R.ok(res, {
             perfil: ml.perfil,

@@ -1,4 +1,4 @@
-//Ruta del apartado de inversión
+// Ruta del apartado de inversión
 
 const router = require('express').Router();
 const { body } = require('express-validator');
@@ -8,10 +8,20 @@ const { validate } = require('../middlewares/validate');
 
     router.use(authMiddleware);
 
+// GET /inversiones/tipos: Lista los tipos de inversión disponibles, con su rendimiento esperado.
+
     router.get('/tipos', getTiposInversion);
+
+// GET /inversiones: Lista las inversiones (activas o pasadas) del usuario autenticado.
+
     router.get('/', getMisInversiones);
+
+// POST /inversiones/:id/cobrar: Liquida una inversión vencida y acredita su rendimiento al wallet.
+
     router.post('/:id/cobrar',cobrarInversion);
 
+// POST /inversiones: Crea una nueva inversión del tipo y monto indicados por el usuario.
+    
     router.post(
       '/',
       [

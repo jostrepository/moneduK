@@ -1,4 +1,4 @@
-//Ruta del apartado de lecciones
+// Ruta del apartado de lecciones
 
 const router = require('express').Router();
 const { body } = require('express-validator');
@@ -8,15 +8,15 @@ const { validate } = require('../middlewares/validate');
 
     router.use(authMiddleware);
 
-// GET /lecciones
+// GET /lecciones: Lista todas las lecciones educativas disponibles.
 
     router.get('/', getLecciones);
 
-// GET /lecciones/:id
+// GET /lecciones/:id: Devuelve el contenido detallado de una lección específica.
 
     router.get('/:id', getLeccion);
 
-// POST /lecciones/:id/completar
+// POST /lecciones/:id/completar: Marca una lección como completada y guarda el puntaje del quiz asociado.
 
     router.post(
       '/:id/completar',

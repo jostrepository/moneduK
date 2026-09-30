@@ -1,10 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { unauthorized } = require('../utils/response');
 
-/**
- * Middleware que verifica el JWT en el header Authorization.
- * Si es válido, adjunta el payload en req.user y llama a next().
- */
+
+    // Interceptamos las peticiones para validar la presencia y firma del token JWT
+    // bloqueando el acceso si la cabecera está ausente o no tiene el formato correcto.
 
     const authMiddleware = (req, res, next) => {
       const authHeader = req.headers['authorization'];
@@ -16,6 +15,11 @@ const { unauthorized } = require('../utils/response');
       const token = authHeader.split(' ')[1];
 
       try {
+
+
+        // Decodificamos la carga útil del token para incrustarla en el objeto request
+        // permitiendo que los controladores posteriores identifiquen al usuario emisor.
+
         const payload = jwt.verify(token, process.env.JWT_SECRET);
         req.user = payload; // { id_usuario, email, id_rol }
         next();
@@ -27,10 +31,9 @@ const { unauthorized } = require('../utils/response');
       }
   };
 
-/**
- * Middleware para restringir rutas solo a tutores (id_rol === 2).
- * Debe usarse DESPUÉS de authMiddleware.
- */
+
+    // Evaluamos el rol del usuario autenticado para restringir zonas administrativas
+    // rechazando automáticamente cualquier solicitud que provenga de un estudiante.
 
     const tutorOnly = (req, res, next) => {
       if (req.user?.id_rol !== 2) {

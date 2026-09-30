@@ -19,6 +19,10 @@ import {
     SplashScreen.preventAutoHideAsync();
 
     export default function RootLayout() {
+
+      // Montamos los assets tipográficos en paralelo al arranque de la aplicación móvil
+      // evitando destellos de fuentes nativas (FOUC) durante el primer renderizado de la UI.
+
       const [fontsLoaded] = useFonts({
             Nunito_400Regular,
             Nunito_600SemiBold,
@@ -28,10 +32,17 @@ import {
         });
 
       useEffect(() => {
+
+        // Retenemos el splash screen nativo enganchándolo a nuestra promesa de fuentes
+        // revelando la aplicación únicamente cuando la interfaz esté en capacidad de pintarse íntegra.
+
         if (fontsLoaded) SplashScreen.hideAsync();
       }, [fontsLoaded]);
 
       if (!fontsLoaded) return null;
+
+      // Proveemos el estado global de autenticación como capa superior envolvente
+      // para habilitar el redireccionamiento privado en todos los nodos de la jerarquía (tabs).
 
       return (
         <AuthProvider>

@@ -1,12 +1,12 @@
-//Ruta del apartado de autenticación
-
 const router = require('express').Router();
 const { body } = require('express-validator');
 const { register, login, me } = require('../controllers/authController');
 const { authMiddleware } = require('../middlewares/auth');
 const { validate } = require('../middlewares/validate');
 
-// POST /auth/register
+
+    // Definimos la ruta de registro aplicando una cadena de validadores estrictos
+    // para garantizar que la estructura de los datos sea correcta antes de operar.
 
     router.post(
       '/register',
@@ -30,7 +30,9 @@ const { validate } = require('../middlewares/validate');
       register
     );
 
-// POST /auth/login
+
+    // Exponemos el endpoint de acceso validando únicamente el formato del correo
+    // y la presencia de la contraseña para delegar la autenticación al controlador.
 
     router.post(
       '/login',
@@ -42,7 +44,9 @@ const { validate } = require('../middlewares/validate');
       login
     );
 
-// GET /auth/me  (protegida)
+
+    // Protegemos la ruta del perfil inyectando el middleware de verificación JWT
+    // asegurando que solo usuarios con sesión activa puedan consultar sus datos.
 
     router.get('/me', authMiddleware, me);
 

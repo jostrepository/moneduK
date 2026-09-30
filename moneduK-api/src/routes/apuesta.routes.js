@@ -1,4 +1,4 @@
-//Ruta del apartado de apuestas
+// Ruta del apartado de apuestas
 
 const router = require('express').Router();
 const { body } = require('express-validator');
@@ -8,7 +8,11 @@ const { validate } = require('../middlewares/validate');
 
       router.use(authMiddleware);
 
+// GET /apuestas/historial: Lista las apuestas que el usuario ha realizado.
+
       router.get('/historial', getHistorialApuestas);
+
+// POST /apuestas: Registra una nueva apuesta con el monto indicado y calcula su resultado.
 
       router.post(
         '/',

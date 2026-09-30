@@ -6,11 +6,13 @@ import {
   ScrollView, RefreshControl, TouchableOpacity,
   Alert, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
-import { mascotaService } from '../../services/api';
+import { useFocusEffect } from '@react-navigation/native';
+import { mascotaService, tiendaService } from '../../services/api';
 import { MascotaDisplay } from '../../components/mascota/MascotaDisplay';
 import { Logo } from '../../components/ui/Logo';
 import { Colors, Fonts, FontWeights, Typography, Spacing, Radii, Shadows } from '../../constants/theme';
 import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalidad';
+
 
 
     interface Mascota {
@@ -25,6 +27,7 @@ import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalida
     export default function HomeScreen() {
       const [mascota, setMascota] = useState<Mascota | null>(null);
       const [historial, setHistorial] = useState<HistorialItem[]>([]);
+      const [misCompras, setMisCompras] = useState<any[]>([]);
       const [refreshing, setRefreshing] = useState(false);
       const [renombrando, setRenombrando] = useState(false);
       const [nuevoNombre, setNuevoNombre] = useState('');
@@ -32,17 +35,30 @@ import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalida
 
       const fetchData = useCallback(async () => {
         try {
-          const [mRes, hRes] = await Promise.all([
+          const [mRes, hRes, cRes] = await Promise.all([
             mascotaService.getMiMascota(),
             mascotaService.getHistorial(),
+            tiendaService.getMisCompras(), 
           ]);
           setMascota(mRes.data.data);
           setHistorial(hRes.data.data.slice(0, 10));
-        } catch {}
-        finally { setRefreshing(false); }
+          
+          // FILTRO CLAVE: Guardamos solo los objetos cuyo valor 'equipado' sea verdadero (1 o true)
+          const itemsEquipados = cRes.data.data.filter((item: any) => item.equipado === 1 || item.equipado === true);
+          setMisCompras(itemsEquipados);
+          
+        } catch (error) {
+          console.log("Error al cargar datos:", error);
+        } finally { 
+          setRefreshing(false); 
+        }
       }, []);
 
-      useEffect(() => { fetchData(); }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
       const onRefresh = () => { setRefreshing(true); fetchData(); };
 
@@ -96,15 +112,17 @@ import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalida
 
             {mascota ? (
               <>
-                <MascotaDisplay
-                  nombre={mascota.nombre}
-                  salud={mascota.salud}
-                  nivel={mascota.nivel}
-                  estado={mascota.estado}
-                  size="lg"
-                  showBirrete
-                  showStats
-                />
+              <MascotaDisplay
+              nombre={mascota.nombre}
+              salud={mascota.salud}
+              nivel={mascota.nivel}
+              estado={mascota.estado}
+              size="lg"
+              showBirrete
+              showStats
+              // Esta propiedad es la que dibujará los emojis sobre el cerdito
+              articulosEquipados={misCompras}
+            />
                 <TouchableOpacity
                   style={styles.renombrarBtn}
                   onPress={() => { setNuevoNombre(mascota.nombre); setRenombrando(true); }}

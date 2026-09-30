@@ -2,6 +2,7 @@ const { pool } = require('../config/db');
 const R = require('../utils/response');
 const { aplicarXPySalud } = require('../utils/mascotaHelper');
 
+
 // Banco de 20 preguntas (índice 0-19)
 
     const PREGUNTAS = [
@@ -130,6 +131,10 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
 
     const getEstadoQuiz = async (req, res) => {
       try {
+
+        // Consultamos el registro más reciente del usuario en este minijuego específico
+        // para determinar la viabilidad de una nueva sesión basándonos en la fecha.
+
         const [rows] = await pool.query(
           `SELECT fecha FROM historial_minijuego
           WHERE id_usuario = ? AND tipo = 'quiz'
@@ -137,6 +142,10 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
           [req.user.id_usuario]
         );
         if (rows.length === 0) return R.ok(res, { puede_jugar: true, minutos_restantes: 0 });
+
+
+        // Evaluamos el tiempo transcurrido desde la última partida para validar el cooldown
+        // devolviendo los minutos exactos restantes si el periodo de bloqueo sigue activo.
 
         const minutos = (new Date() - new Date(rows[0].fecha)) / 60000;
         if (minutos >= 120) return R.ok(res, { puede_jugar: true, minutos_restantes: 0 });
@@ -149,6 +158,7 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
       } catch (err) { return R.serverError(res, err); }
   };
 
+
 // Obtener preguntas
 
 /**
@@ -160,6 +170,10 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
 
     const getPreguntas = async (req, res) => {
       try {
+
+        // Ejecutamos una segunda capa de seguridad consultando nuevamente el cooldown
+        // para bloquear a los usuarios que intenten saltarse la restricción desde el frontend.
+
         const [rows] = await pool.query(
           `SELECT fecha FROM historial_minijuego
           WHERE id_usuario = ? AND tipo = 'quiz'
@@ -173,16 +187,25 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
           }
         }
 
+
     // Seleccionar 5 índices aleatorios únicos del banco
+
+        // Barajamos matemáticamente el índice completo del banco de preguntas estático
+        // para extraer una muestra impredecible y garantizar la rejugabilidad del quiz.
 
         const todosIndices = Array.from({ length: PREGUNTAS.length }, (_, i) => i);
         const shuffled = todosIndices.sort(() => Math.random() - 0.5);
         const indices = shuffled.slice(0, 5);
 
+
+        // Mapeamos los datos purgados de las preguntas seleccionadas para el cliente
+        // omitiendo intencionalmente la respuesta correcta para evitar trampas por red.
+
         const preguntas = indices.map((idx, i) => ({
           id: i,
           pregunta: PREGUNTAS[idx].pregunta,
           opciones: PREGUNTAS[idx].opciones,
+
       // ⚠️ No incluye que se muestre opción correcta por el momento
     }));
 
@@ -194,6 +217,7 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
         });
       } catch (err) { return R.serverError(res, err); }
   };
+
 
 // Completar quiz
 
@@ -211,6 +235,10 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
         const { respuestas, indices_preguntas } = req.body;
         const id_usuario = req.user.id_usuario;
 
+
+        // Validamos estructuralmente el arreglo de respuestas e índices recibidos
+        // rechazando envíos incompletos o manipulados que rompan la lógica de calificación.
+
         if (!Array.isArray(respuestas) || respuestas.length !== 5) {
           return R.badRequest(res, 'Debes enviar exactamente 5 respuestas');
         }
@@ -218,7 +246,11 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
           return R.badRequest(res, 'Debes enviar los 5 índices de preguntas');
         }
 
+
     // Verificar cooldown
+        // Comprobamos por tercera y última vez la legitimidad de la ventana de tiempo
+        // evitando que scripts automáticos exploten el endpoint de recompensas.
+
         const [histRows] = await conn.query(
           `SELECT fecha FROM historial_minijuego
           WHERE id_usuario = ? AND tipo = 'quiz'
@@ -233,26 +265,40 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
           }
         }
 
+
     // Calcular resultados usando los índices originales
+        // Contrastamos las selecciones del usuario directamente contra la matriz del servidor
+        // asegurando una auditoría inviolable del puntaje y generando el desglose de aciertos.
+
         const resultados = indices_preguntas.map((idxOriginal, i) => {
           const pregObj = PREGUNTAS[idxOriginal];
           const respUsuario = respuestas[i];
           const correcta = pregObj.correcta === respUsuario;
           return {
-            pregunta:        pregObj.pregunta,
-            opcion_elegida:  pregObj.opciones[respUsuario]  ?? 'Sin respuesta',
+            pregunta: pregObj.pregunta,
+            opcion_elegida: pregObj.opciones[respUsuario]  ?? 'Sin respuesta',
             opcion_correcta: pregObj.opciones[pregObj.correcta],
             indice_correcto: pregObj.correcta,
             correcta,
           };
         });
 
+        // Tabulamos las métricas finales de desempeño aislando aciertos de errores
+        // para estructurar las variables que alimentarán los algoritmos de recompensa.
         const aciertos = resultados.filter(r => r.correcta).length;
         const errores  = 5 - aciertos;
+
+        
+        // Definimos las compensaciones de la actividad aplicando multiplicadores de desempeño
+        // donde cada acierto suma puntos positivos y cada error penaliza la integridad final.
 
         const koin_ganado = 50;
         const xp_ganado   = 50;
         const salud_delta = (aciertos * 10) - (errores * 10);
+
+
+        // Preparamos el entorno financiero consultando el balance del jugador en curso
+        // y estableciendo un punto de control para la transacción atómica inminente.
 
         const [walletRows] = await conn.query(
           'SELECT id_wallet, saldo FROM wallet WHERE id_usuario = ?', [id_usuario]
@@ -262,21 +308,37 @@ const { aplicarXPySalud } = require('../utils/mascotaHelper');
 
         await conn.beginTransaction();
 
+
+        // Ingresamos el comprobante del minijuego con su calificación y ganancias
+        // sellando el timestamp que iniciará la cuenta regresiva del cooldown en la base de datos.
+
         await conn.query(
           `INSERT INTO historial_minijuego (id_usuario, tipo, puntaje, koin_ganado, xp_ganado)
           VALUES (?, 'quiz', ?, ?, ?)`,
           [id_usuario, aciertos, koin_ganado, xp_ganado]
         );
 
+
+        // Inyectamos la recompensa estática a la billetera y actualizamos el libro mayor
+        // engrosando el indicador de riqueza acumulada para el motor de machine learning.
+
         await conn.query(
           'UPDATE wallet SET saldo = saldo + ?, total_ganado = total_ganado + ? WHERE id_wallet = ?',
           [koin_ganado, koin_ganado, id_wallet]
         );
 
+
+        // Asentamos el justificante financiero de la entrada con la etiqueta de premio
+        // permitiéndole al usuario auditar el origen de este ingreso en su módulo.
+
         await conn.query(
           'INSERT INTO transaccion (id_wallet, id_tipo, monto, descripcion) VALUES (?,6,?,?)',
           [id_wallet, koin_ganado, `Quiz financiero — ${aciertos}/5 aciertos`]
         );
+
+
+        // Transferimos el resultado matemático del quiz al sistema de la mascota
+        // procesando el crecimiento o decrecimiento de la salud a través del helper centralizado.
 
         const mascotaResult = await aplicarXPySalud(
           conn, id_usuario, xp_ganado, salud_delta, 100,

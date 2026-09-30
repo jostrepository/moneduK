@@ -6,7 +6,8 @@ const { authMiddleware } = require('../middlewares/auth');
 
         router.use(authMiddleware);
 
-// GET /ml/perfil
+// GET /ml/perfil: Consulta el perfil de personalidad financiera que el modelo de aprendizaje automático 
+// le asignó al usuario, según su comportamiento en la app.
 
         router.get('/perfil', getPerfilCerdito);
 

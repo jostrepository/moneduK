@@ -1,5 +1,9 @@
 const mysql = require('mysql2/promise');
 
+
+    // Inicializamos el gestor de conexiones a la base de datos utilizando un pool
+    // para optimizar el rendimiento y reutilizar los hilos en peticiones concurrentes.
+
     const pool = mysql.createPool({
       host: process.env.DB_HOST || 'localhost',
       port: process.env.DB_PORT || 3306,
@@ -12,7 +16,9 @@ const mysql = require('mysql2/promise');
       timezone: 'Z',
     });
 
-// Verifica la conexión al iniciar
+
+    // Verificamos la disponibilidad del servidor de base de datos durante el arranque
+    // abortando el proceso inmediatamente si no es posible establecer comunicación.
 
     async function testConnection() {
       try {

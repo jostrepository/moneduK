@@ -24,6 +24,9 @@ import { Colors, Fonts, Typography, Spacing, Radii, Shadows } from '../../consta
         ml_activo: boolean;
   }
 
+    // Clasificamos en memoria las variables cromáticas para cada estado anímico
+    // inyectando consistencia en la colorimetría de la burbuja sin cargar el backend.
+
     const ESTADO_COLORES: Record<string, { bg: string; border: string; text: string; bubble: string }> = {
         feliz: { bg: '#F0FDF4', border: '#22C55E60', text: '#166534', bubble: '#DCFCE7' },
         emocionado: { bg: '#EEF2FF', border: '#6366F160', text: '#3730A3', bubble: '#E0E7FF' },
@@ -36,6 +39,10 @@ import { Colors, Fonts, Typography, Spacing, Radii, Shadows } from '../../consta
 // Hook: efecto de escritura letra por letra
 
     const useTypewriter = (texto: string, velocidad = 28) => {
+      
+      // Controlamos la interpolación textual simulando tipeo humano para atrapar la atención
+      // y disolvemos el intervalo de memoria inmediatamente cuando el ciclo culmina.
+
       const [displayText, setDisplayText] = useState('');
       const [escribiendo, setEscribiendo] = useState(false);
 
@@ -83,6 +90,10 @@ import { Colors, Fonts, Typography, Spacing, Radii, Shadows } from '../../consta
   // Animación de rebote del cerdito cuando escribe
 
       useEffect(() => {
+
+        // Engranamos el latido de la UI con la cadencia de la máquina de escribir
+        // parando el latido en seco cuando el texto logra renderizarse por completo.
+
         if (escribiendo) {
           Animated.loop(
             Animated.sequence([
@@ -97,6 +108,10 @@ import { Colors, Fonts, Typography, Spacing, Radii, Shadows } from '../../consta
       }, [escribiendo]);
 
       const cargarPerfil = async () => {
+        
+        // Hacemos ping al motor en Python para recuperar la lectura predictiva actual
+        // y atamos la respuesta a una cascada de animaciones fluidas para la revelación del panel.
+
         setLoading(true);
         try {
           const res = await api.get('/ml/perfil');
@@ -125,6 +140,10 @@ import { Colors, Fonts, Typography, Spacing, Radii, Shadows } from '../../consta
     };
 
       const nuevoConsejo = async () => {
+
+        // Vaciamos el viewport retrayendo la burbuja a escala cero para enmascarar la latencia
+        // y repintamos el cuadro rebotando la interfaz apenas llegue la nueva frase del servidor.
+
         if (cargandoConsejo) return;
         setCargandoConsejo(true);
 

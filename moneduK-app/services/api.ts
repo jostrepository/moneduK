@@ -17,6 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
     //const BASE_URL = 'https://moneduk-production.up.railway.app/api';
 
 
+  // Centralizamos la configuración del cliente HTTP definiendo las variables estáticas
+  // para unificar el dominio base y estandarizar las cabeceras de todas las solicitudes.
+
     const api = axios.create({
       baseURL: BASE_URL,
       timeout: 10000,
@@ -28,13 +31,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Interceptor: adjunta el token JWT a cada petición
 
+  // Interceptamos la salida de las peticiones para incrustar el token de autenticación
+  // asegurando que las solicitudes lleven la firma digital del usuario si existe sesión.
+
     api.interceptors.request.use(async (config) => {
       const token = await AsyncStorage.getItem('token');
+      
       if (token) config.headers.Authorization = `Bearer ${token}`;
+      
       return config;
     });
 
 // Interceptor: manejo global de errores
+
+  // Monitoreamos las respuestas del servidor para detectar fallos de autorización
+  // purgando el almacenamiento local automáticamente si el JWT fue revocado o expiró.
 
     api.interceptors.response.use(
       (response) => response,
@@ -47,6 +58,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
     );
 
 // Auth 
+
+  // Agrupamos las llamadas a la red relacionadas con la gestión de usuarios
+  // exportando métodos limpios que abstraen las rutas y las estructuras de los bodies.
 
     export const authService = {
       register: (data: {
@@ -117,12 +131,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tienda
 
-    export const tiendaService = {
-      getProductos: () => api.get('/tienda'),
-      comprar: (id_producto: number) =>
-        api.post('/tienda/comprar', { id_producto }),
-      getMisCompras:  () => api.get('/tienda/mis-compras'),
-    };
+export const tiendaService = {
+  getProductos: () => api.get('/tienda'),
+  comprar: (id_producto: number) => api.post('/tienda/comprar', { id_producto }),
+  getMisCompras: () => api.get('/tienda/mis-compras'),
+  equipar: (id_compra: number, equipar: boolean) => api.patch('/tienda/equipar', { id_compra, equipar }),
+};
 
 // Misiones
 
