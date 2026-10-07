@@ -6,12 +6,13 @@ import {
   ScrollView, RefreshControl, TouchableOpacity,
   Alert, Modal, TextInput, ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { mascotaService, tiendaService } from '../../services/api';
 import { MascotaDisplay } from '../../components/mascota/MascotaDisplay';
 import { Logo } from '../../components/ui/Logo';
 import { Colors, Fonts, FontWeights, Typography, Spacing, Radii, Shadows } from '../../constants/theme';
 import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalidad';
+import { useFocusEffect } from 'expo-router';
 
 
 
@@ -33,6 +34,7 @@ import { CerditoPersonalidad } from '../../components/mascota/CerditoPersonalida
       const [nuevoNombre, setNuevoNombre] = useState('');
       const [guardando, setGuardando] = useState(false);
 
+      const router = useRouter();
       const fetchData = useCallback(async () => {
         try {
           const [mRes, hRes, cRes] = await Promise.all([

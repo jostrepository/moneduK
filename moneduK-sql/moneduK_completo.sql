@@ -99,46 +99,46 @@ CREATE TABLE IF NOT EXISTS transaccion (
 );
 
 -- ============================================================
--- 7. MASCOTAS (CERDITO ALCANCÍA ÚNICAMENTE POR EL MOMENTO)
--- ============================================================
-CREATE TABLE IF NOT EXISTS estado_mascota (
-    id_estado       INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-    nombre          VARCHAR(30)     NOT NULL,
-    descripcion     VARCHAR(150)    NULL,
-    icono_url       VARCHAR(255)    NULL,
-    rango_salud_min TINYINT         NOT NULL,
-    rango_salud_max TINYINT         NOT NULL,
-    PRIMARY KEY (id_estado)
-);
+    -- 7. MASCOTAS (CERDITO ALCANCÍA ÚNICAMENTE POR EL MOMENTO)
+    -- ============================================================
+    CREATE TABLE IF NOT EXISTS estado_mascota (
+        id_estado       INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+        nombre          VARCHAR(30)     NOT NULL,
+        descripcion     VARCHAR(150)    NULL,
+        icono_url       VARCHAR(255)    NULL,
+        rango_salud_min TINYINT         NOT NULL,
+        rango_salud_max TINYINT         NOT NULL,
+        PRIMARY KEY (id_estado)
+    );
 
-CREATE TABLE IF NOT EXISTS mascota (
-    id_mascota          INT UNSIGNED     NOT NULL AUTO_INCREMENT,
-    id_usuario          INT UNSIGNED     NOT NULL UNIQUE,
-    nombre              VARCHAR(60)      NOT NULL DEFAULT 'Koinchi',
-    nivel               TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    salud               TINYINT UNSIGNED NOT NULL DEFAULT 100,
-    id_estado           INT UNSIGNED     NOT NULL,
-    experiencia         INT UNSIGNED     NOT NULL DEFAULT 0,
-    fecha_creacion      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_mascota),
-    CONSTRAINT fk_mascota_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
-    CONSTRAINT fk_mascota_estado  FOREIGN KEY (id_estado)  REFERENCES estado_mascota (id_estado)
-);
+    CREATE TABLE IF NOT EXISTS mascota (
+        id_mascota          INT UNSIGNED     NOT NULL AUTO_INCREMENT,
+        id_usuario          INT UNSIGNED     NOT NULL UNIQUE,
+        nombre              VARCHAR(60)      NOT NULL DEFAULT 'Koinchi',
+        nivel               TINYINT UNSIGNED NOT NULL DEFAULT 1,
+        salud               TINYINT UNSIGNED NOT NULL DEFAULT 100,
+        id_estado           INT UNSIGNED     NOT NULL,
+        experiencia         INT UNSIGNED     NOT NULL DEFAULT 0,
+        fecha_creacion      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        fecha_actualizacion DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_mascota),
+        CONSTRAINT fk_mascota_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
+        CONSTRAINT fk_mascota_estado  FOREIGN KEY (id_estado)  REFERENCES estado_mascota (id_estado)
+    );
 
--- ============================================================
--- 8. HISTORIAL DE SALUD DE LA MASCOTA
--- ============================================================
-CREATE TABLE IF NOT EXISTS historial_mascota (
-    id_historial    INT UNSIGNED     NOT NULL AUTO_INCREMENT,
-    id_mascota      INT UNSIGNED     NOT NULL,
-    salud_anterior  TINYINT UNSIGNED NOT NULL,
-    salud_nueva     TINYINT UNSIGNED NOT NULL,
-    motivo          VARCHAR(150)     NULL,
-    fecha           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_historial),
-    CONSTRAINT fk_hm_mascota FOREIGN KEY (id_mascota) REFERENCES mascota (id_mascota)
-);
+    -- ============================================================
+    -- 8. HISTORIAL DE SALUD DE LA MASCOTA
+    -- ============================================================
+    CREATE TABLE IF NOT EXISTS historial_mascota (
+        id_historial    INT UNSIGNED     NOT NULL AUTO_INCREMENT,
+        id_mascota      INT UNSIGNED     NOT NULL,
+        salud_anterior  TINYINT UNSIGNED NOT NULL,
+        salud_nueva     TINYINT UNSIGNED NOT NULL,
+        motivo          VARCHAR(150)     NULL,
+        fecha           DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_historial),
+        CONSTRAINT fk_hm_mascota FOREIGN KEY (id_mascota) REFERENCES mascota (id_mascota)
+    );
 
 -- ============================================================
 -- 9. CATEGORÍAS DE LECCIONES
